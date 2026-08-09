@@ -94,3 +94,29 @@ def test_score_sentences_ignores_russian_stopwords() -> None:
     scores = score_sentences(sentences)
     assert scores[0] == 0
     assert scores[1] > scores[0]
+
+
+def test_score_sentences_ignores_intra_sentence_repetition() -> None:
+    # A single word repeated many times in one sentence must not outscore a
+    # sentence with several distinct real words. Without per-sentence
+    # deduplication, "банан" x8 (self-inflated frequency 8, summed 8 times)
+    # would score 64 and dwarf everything else.
+    sentences = [
+        "Банан банан банан банан банан банан банан банан.",
+        "Компания разрабатывает новую систему анализа данных.",
+    ]
+    scores = score_sentences(sentences)
+    assert scores[0] < scores[1]
+
+
+def test_summarize_excludes_dominant_repeated_word_sentence() -> None:
+    text = (
+        "Компания разрабатывает новую систему искусственного интеллекта для "
+        "анализа медицинских данных. Проект помогает врачам быстрее находить "
+        "важную информацию в документах. Банан банан банан банан банан банан "
+        "банан банан. Новая технология сокращает время обработки результатов "
+        "исследований. Разработчики планируют протестировать систему в "
+        "нескольких клиниках."
+    )
+    result = summarize(text, num_sentences=2)
+    assert "банан" not in result.lower()

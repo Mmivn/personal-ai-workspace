@@ -142,11 +142,16 @@ def _tokenize(sentence: str) -> list[str]:
 
 
 def score_sentences(sentences: list[str]) -> list[float]:
-    """Score each sentence by the summed frequency of its non-stopword words."""
-    tokenized = [[w for w in _tokenize(s) if w not in _STOPWORDS] for s in sentences]
+    """Score each sentence by the summed frequency of its distinct non-stopword words.
+
+    Each sentence's own repeated words count once toward both the corpus
+    frequency table and its own score, so a word repeated many times inside
+    a single sentence cannot inflate that sentence's score on its own.
+    """
+    tokenized = [{w for w in _tokenize(s) if w not in _STOPWORDS} for s in sentences]
     word_freq: Counter[str] = Counter()
     for words in tokenized:
-        word_freq.update(words)
+        word_freq.update(words)  # each sentence contributes each word at most once
 
     return [float(sum(word_freq[w] for w in words)) for words in tokenized]
 
