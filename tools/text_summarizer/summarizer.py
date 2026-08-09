@@ -51,7 +51,7 @@ _STOPWORDS = frozenset(
 )
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
-_WORD_RE = re.compile(r"[a-z0-9']+")
+_WORD_RE = re.compile(r"(?:[^\W_]|')+")
 
 
 def split_sentences(text: str) -> list[str]:

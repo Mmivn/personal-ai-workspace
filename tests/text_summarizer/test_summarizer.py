@@ -2,7 +2,12 @@
 
 import pytest
 
-from tools.text_summarizer.summarizer import score_sentences, split_sentences, summarize
+from tools.text_summarizer.summarizer import (
+    _tokenize,  # pyright: ignore[reportPrivateUsage]
+    score_sentences,
+    split_sentences,
+    summarize,
+)
 
 
 def test_split_sentences_basic() -> None:
@@ -55,3 +60,26 @@ def test_summarize_empty_text() -> None:
 def test_summarize_rejects_non_positive_num_sentences() -> None:
     with pytest.raises(ValueError):
         summarize("Some text. More text.", num_sentences=0)
+
+
+def test_tokenize_extracts_cyrillic_words() -> None:
+    # Direct proof the tokenizer regex matches Cyrillic letters, not just ASCII.
+    assert _tokenize("Привет, мир! Это тест.") == ["привет", "мир", "это", "тест"]
+
+
+def test_score_sentences_favors_repeated_cyrillic_words() -> None:
+    sentences = ["Кошки очень умные.", "Сегодня хорошая погода.", "Кошки очень ласковые."]
+    scores = score_sentences(sentences)
+    # "кошки" and "очень" repeat in sentences 0 and 2, so they should outscore
+    # sentence 1, whose words don't repeat elsewhere. This fails on the old
+    # ASCII-only tokenizer, which would score every sentence 0.
+    assert scores[0] > scores[1]
+    assert scores[2] > scores[1]
+
+
+def test_summarize_picks_top_n_cyrillic_in_original_order() -> None:
+    text = "Кошки любят играть. Дождь идёт весь день. Кошки любят молоко. Птицы поют рано утром."
+    result = summarize(text, num_sentences=2)
+    # The two cat sentences share repeated words ("кошки", "любят") and should
+    # outscore the others, but must come back in original reading order.
+    assert result == "Кошки любят играть. Кошки любят молоко."
