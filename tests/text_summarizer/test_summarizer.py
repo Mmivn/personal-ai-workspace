@@ -3,6 +3,7 @@
 import pytest
 
 from tools.text_summarizer.summarizer import (
+    _jaccard_similarity,  # pyright: ignore[reportPrivateUsage]
     _tokenize,  # pyright: ignore[reportPrivateUsage]
     score_sentences,
     split_sentences,
@@ -170,3 +171,40 @@ def test_score_sentences_normalizes_by_sentence_length() -> None:
     ]
     scores = score_sentences(sentences)
     assert scores[0] > scores[1]
+
+
+def test_jaccard_similarity() -> None:
+    assert _jaccard_similarity({"a", "b"}, {"a", "b"}) == 1.0
+    assert _jaccard_similarity({"a", "b"}, {"c", "d"}) == 0.0
+    assert _jaccard_similarity({"a", "b"}, {"b", "c"}) == pytest.approx(1 / 3)
+    assert _jaccard_similarity(set(), {"a"}) == 0.0
+    assert _jaccard_similarity({"a"}, set()) == 0.0
+    assert _jaccard_similarity(set(), set()) == 0.0
+
+
+def test_summarize_prefers_diverse_sentence_over_near_duplicate() -> None:
+    text = (
+        "Компания сообщила об увеличении прибыли в этом квартале. "
+        "Компания сообщила об увеличении прибыли в четвертом квартале. "
+        "Клиенты жалуются на долгую поддержку."
+    )
+    # The first two sentences differ by one word and both outscore the
+    # third (unrelated) sentence, but they're near-duplicates (Jaccard
+    # ~0.83). Without redundancy filtering, the top 2 by score alone would
+    # be the two near-duplicates, wasting a slot on repeated content.
+    result = summarize(text, num_sentences=2)
+    assert "долгую поддержку" in result
+    assert result.count("Компания сообщила") == 1
+
+
+def test_summarize_backfill_still_returns_requested_count_when_all_redundant() -> None:
+    text = (
+        "Прибыль компании выросла в этом квартале. "
+        "Прибыль нашей компании выросла в этом квартале. "
+        "Прибыль компании сильно выросла в этом квартале."
+    )
+    # All three sentences are mutually near-duplicates. Redundancy
+    # filtering alone would only ever select one of them; the backfill
+    # step must still return exactly 2, not 1.
+    result = summarize(text, num_sentences=2)
+    assert len(split_sentences(result)) == 2
