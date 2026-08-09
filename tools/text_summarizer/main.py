@@ -13,9 +13,9 @@ from tools.text_summarizer.summarizer import summarize
 
 
 def _read_input(file_path: str | None) -> str:
-    """Read text from `file_path`, or from stdin if no path is given."""
+    """Read text from `file_path` (as UTF-8), or from stdin if no path is given."""
     if file_path:
-        return Path(file_path).read_text()
+        return Path(file_path).read_text(encoding="utf-8")
     return sys.stdin.read()
 
 
