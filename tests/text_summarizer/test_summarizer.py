@@ -28,6 +28,41 @@ def test_split_sentences_single() -> None:
     assert split_sentences("Just one sentence.") == ["Just one sentence."]
 
 
+def test_split_sentences_keeps_title_abbreviation_together() -> None:
+    text = "Dr. Smith arrived early. The meeting began."
+    assert split_sentences(text) == [
+        "Dr. Smith arrived early.",
+        "The meeting began.",
+    ]
+
+
+def test_split_sentences_keeps_cyrillic_initials_together() -> None:
+    text = "Роман А. С. Пушкина известен всем. Многие его читали."
+    assert split_sentences(text) == [
+        "Роман А. С. Пушкина известен всем.",
+        "Многие его читали.",
+    ]
+
+
+def test_split_sentences_keeps_russian_reference_abbreviation_together() -> None:
+    text = "Смотри рис. 3 в приложении. Там указаны данные."
+    assert split_sentences(text) == [
+        "Смотри рис. 3 в приложении.",
+        "Там указаны данные.",
+    ]
+
+
+def test_split_sentences_still_splits_after_ambiguous_abbreviations() -> None:
+    # "и т.д." ("etc.") is deliberately NOT suppressed -- it's usually
+    # sentence-final in practice, so treating it as a boundary is correct
+    # more often than not. This documents that known, intentional tradeoff.
+    text = "Он купил яблоки, апельсины и т.д. Потом пошёл домой."
+    assert split_sentences(text) == [
+        "Он купил яблоки, апельсины и т.д.",
+        "Потом пошёл домой.",
+    ]
+
+
 def test_score_sentences_favors_repeated_words() -> None:
     sentences = ["Cats are great.", "The weather is fine.", "Cats are wonderful."]
     scores = score_sentences(sentences)

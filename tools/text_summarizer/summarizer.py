@@ -125,16 +125,62 @@ _RUSSIAN_STOPWORDS = frozenset(
 
 _STOPWORDS = _ENGLISH_STOPWORDS | _RUSSIAN_STOPWORDS
 
-_SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+_SENTENCE_END_RE = re.compile(r"[.!?]+(?=\s)")
+_TRAILING_WORD_RE = re.compile(r"(\S+)$")
 _WORD_RE = re.compile(r"(?:[^\W_]|')+")
+
+# Title/reference abbreviations that are essentially never real sentence
+# boundaries (always followed by more of the same sentence). Deliberately
+# excludes ambiguous abbreviations like "etc." or "и т.д." that are often
+# sentence-final in practice -- suppressing splits after those would trade
+# one bug for another (merging two real sentences).
+_SAFE_ABBREVIATIONS = frozenset(
+    {
+        "mr",
+        "mrs",
+        "ms",
+        "dr",
+        "prof",
+        "sr",
+        "jr",
+        "st",
+        "vs",
+        "гг",
+        "им",
+        "ул",
+        "рис",
+        "стр",
+        "см",
+        "тыс",
+        "проф",
+    }
+)
 
 
 def split_sentences(text: str) -> list[str]:
-    """Split text into sentences on '.', '!', or '?' followed by whitespace."""
+    """Split text into sentences on '.', '!', or '?' followed by whitespace.
+
+    Suppresses splits after single-letter initials ("А.", "J.") and a
+    small list of title/reference abbreviations that are never real
+    sentence boundaries ("Dr.", "рис."). Ambiguous abbreviations that are
+    often sentence-final in practice (e.g. "etc.", "и т.д.") are NOT
+    suppressed -- treating them as boundaries is more often correct.
+    """
     text = text.strip()
     if not text:
         return []
-    return [s.strip() for s in _SENTENCE_SPLIT_RE.split(text) if s.strip()]
+
+    sentences: list[str] = []
+    start = 0
+    for match in _SENTENCE_END_RE.finditer(text):
+        word_match = _TRAILING_WORD_RE.search(text[start : match.start()])
+        word = word_match.group(1).lower() if word_match else ""
+        if len(word) == 1 or word in _SAFE_ABBREVIATIONS:
+            continue  # not a real sentence boundary
+        sentences.append(text[start : match.end()].strip())
+        start = match.end()
+    sentences.append(text[start:].strip())
+    return [s for s in sentences if s]
 
 
 def _tokenize(sentence: str) -> list[str]:
