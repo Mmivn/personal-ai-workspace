@@ -83,3 +83,14 @@ def test_summarize_picks_top_n_cyrillic_in_original_order() -> None:
     # The two cat sentences share repeated words ("кошки", "любят") and should
     # outscore the others, but must come back in original reading order.
     assert result == "Кошки любят играть. Кошки любят молоко."
+
+
+def test_score_sentences_ignores_russian_stopwords() -> None:
+    # "и" and "в" are common Russian stopwords with no real content; a
+    # sentence built entirely from them should score 0 despite the
+    # repetition, while a sentence with repeated content words scores above
+    # it. This fails (scores[0] > 0) without Russian stopword filtering.
+    sentences = ["И в и в и в.", "Кошки любят кошки."]
+    scores = score_sentences(sentences)
+    assert scores[0] == 0
+    assert scores[1] > scores[0]

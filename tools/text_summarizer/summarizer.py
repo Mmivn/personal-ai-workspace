@@ -8,7 +8,7 @@ highest-scoring sentences are returned in their original order.
 import re
 from collections import Counter
 
-_STOPWORDS = frozenset(
+_ENGLISH_STOPWORDS = frozenset(
     {
         "a",
         "an",
@@ -49,6 +49,80 @@ _STOPWORDS = frozenset(
         "your",
     }
 )
+
+_RUSSIAN_STOPWORDS = frozenset(
+    {
+        "и",
+        "в",
+        "во",
+        "не",
+        "что",
+        "он",
+        "на",
+        "я",
+        "с",
+        "со",
+        "как",
+        "а",
+        "то",
+        "все",
+        "она",
+        "так",
+        "его",
+        "но",
+        "да",
+        "ты",
+        "к",
+        "у",
+        "же",
+        "вы",
+        "за",
+        "бы",
+        "по",
+        "только",
+        "ее",
+        "мне",
+        "было",
+        "вот",
+        "от",
+        "меня",
+        "о",
+        "из",
+        "ему",
+        "когда",
+        "уже",
+        "или",
+        "ни",
+        "быть",
+        "был",
+        "до",
+        "вас",
+        "себя",
+        "они",
+        "тут",
+        "где",
+        "есть",
+        "надо",
+        "для",
+        "мы",
+        "тебя",
+        "их",
+        "чем",
+        "была",
+        "без",
+        "того",
+        "кто",
+        "этот",
+        "этого",
+        "этом",
+        "при",
+        "об",
+        "если",
+        "чтобы",
+    }
+)
+
+_STOPWORDS = _ENGLISH_STOPWORDS | _RUSSIAN_STOPWORDS
 
 _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
 _WORD_RE = re.compile(r"(?:[^\W_]|')+")
