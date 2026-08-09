@@ -120,3 +120,18 @@ def test_summarize_excludes_dominant_repeated_word_sentence() -> None:
     )
     result = summarize(text, num_sentences=2)
     assert "банан" not in result.lower()
+
+
+def test_score_sentences_normalizes_by_sentence_length() -> None:
+    # A short sentence whose words are genuinely repeated elsewhere in the
+    # document should outscore a longer sentence made entirely of words
+    # unique to itself, even though the longer sentence has a higher raw
+    # word-frequency sum. Without sqrt(word count) normalization, the raw
+    # sum would wrongly favor the longer sentence (6 vs 8).
+    sentences = [
+        "Кошки очень умные.",
+        "Дождь холодный сильный неприятный затяжной утомительный монотонный ветреный.",
+        "Кошки очень умные и заботливые.",
+    ]
+    scores = score_sentences(sentences)
+    assert scores[0] > scores[1]
