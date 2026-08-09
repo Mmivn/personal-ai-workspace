@@ -9,13 +9,19 @@ it extracts existing sentences rather than generating new text.
 
 ## Usage
 
-From the project root:
+From the project root, by sentence count (default: 3):
 
 ```
 uv run python -m tools.text_summarizer.main --file input.txt --sentences 3
 ```
 
-Or pipe text via stdin:
+Or by ratio — keep a fraction of the original sentences instead of a fixed count:
+
+```
+uv run python -m tools.text_summarizer.main --file input.txt --ratio 0.2
+```
+
+`--sentences` and `--ratio` are mutually exclusive. Or pipe text via stdin:
 
 ```
 cat input.txt | uv run python -m tools.text_summarizer.main --sentences 3

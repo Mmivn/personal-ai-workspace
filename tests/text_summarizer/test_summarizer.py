@@ -6,6 +6,7 @@ from tools.text_summarizer.summarizer import (
     _jaccard_similarity,  # pyright: ignore[reportPrivateUsage]
     _tokenize,  # pyright: ignore[reportPrivateUsage]
     score_sentences,
+    sentences_for_ratio,
     split_sentences,
     summarize,
 )
@@ -227,3 +228,17 @@ def test_summarize_backfill_still_returns_requested_count_when_all_redundant() -
     # step must still return exactly 2, not 1.
     result = summarize(text, num_sentences=2)
     assert len(split_sentences(result)) == 2
+
+
+def test_sentences_for_ratio() -> None:
+    assert sentences_for_ratio(10, 0.2) == 2
+    assert sentences_for_ratio(10, 0.25) == 3  # rounds up, not down
+    assert sentences_for_ratio(1, 0.1) == 1  # never rounds down to 0
+    assert sentences_for_ratio(0, 0.5) == 1  # empty text: summarize() short-circuits anyway
+    assert sentences_for_ratio(10, 1.0) == 10
+
+
+def test_sentences_for_ratio_rejects_out_of_range_ratio() -> None:
+    for bad_ratio in (0, -0.1, 1.1):
+        with pytest.raises(ValueError):
+            sentences_for_ratio(10, bad_ratio)

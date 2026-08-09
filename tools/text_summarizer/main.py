@@ -2,6 +2,7 @@
 
 Usage:
     uv run python -m tools.text_summarizer.main --file input.txt --sentences 3
+    uv run python -m tools.text_summarizer.main --file input.txt --ratio 0.2
     cat input.txt | uv run python -m tools.text_summarizer.main --sentences 3
 """
 
@@ -9,7 +10,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from tools.text_summarizer.summarizer import summarize
+from tools.text_summarizer.summarizer import sentences_for_ratio, split_sentences, summarize
 
 
 def _read_input(file_path: str | None) -> str:
@@ -29,17 +30,29 @@ def main() -> None:
         default=None,
         help="Path to a text file to summarize. Omit to read from stdin.",
     )
-    parser.add_argument(
+    length_group = parser.add_mutually_exclusive_group()
+    length_group.add_argument(
         "--sentences",
         type=int,
-        default=3,
-        help="Number of sentences to include in the summary (default: 3).",
+        default=None,
+        help="Number of sentences to include in the summary (default: 3 if --ratio is not given).",
+    )
+    length_group.add_argument(
+        "--ratio",
+        type=float,
+        default=None,
+        help="Fraction of the original sentences to keep, e.g. 0.2 for a 20%% summary. "
+        "Mutually exclusive with --sentences.",
     )
     args = parser.parse_args()
 
     try:
         text = _read_input(args.file)
-        result = summarize(text, num_sentences=args.sentences)
+        if args.ratio is not None:
+            num_sentences = sentences_for_ratio(len(split_sentences(text)), args.ratio)
+        else:
+            num_sentences = args.sentences if args.sentences is not None else 3
+        result = summarize(text, num_sentences=num_sentences)
     except OSError as e:
         print(f"Error reading input: {e}", file=sys.stderr)
         sys.exit(1)

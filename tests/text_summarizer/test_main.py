@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from tools.text_summarizer.main import main
+from tools.text_summarizer.summarizer import split_sentences
 
 
 def _set_argv(monkeypatch: pytest.MonkeyPatch, argv: list[str]) -> None:
@@ -57,6 +58,46 @@ def test_main_exits_cleanly_on_invalid_sentence_count(
 ) -> None:
     monkeypatch.setattr(sys, "stdin", io.StringIO("Hello. World."))
     _set_argv(monkeypatch, ["--sentences", "0"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 1
+    err = capsys.readouterr().err
+    assert "error" in err.lower()
+    assert "Traceback" not in err
+
+
+def test_main_ratio_selects_correct_sentence_count(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    text = " ".join(f"Sentence number {i} is here." for i in range(10))
+    monkeypatch.setattr(sys, "stdin", io.StringIO(text))
+    _set_argv(monkeypatch, ["--ratio", "0.2"])
+
+    main()
+
+    result = capsys.readouterr().out
+    assert len(split_sentences(result)) == 2  # 20% of 10 sentences
+
+
+def test_main_rejects_sentences_and_ratio_together(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _set_argv(monkeypatch, ["--sentences", "2", "--ratio", "0.2"])
+
+    with pytest.raises(SystemExit) as exc_info:
+        main()
+
+    assert exc_info.value.code == 2  # argparse's own usage-error exit code
+    assert "not allowed with" in capsys.readouterr().err.lower()
+
+
+def test_main_exits_cleanly_on_invalid_ratio(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(sys, "stdin", io.StringIO("Hello. World."))
+    _set_argv(monkeypatch, ["--ratio", "1.5"])
 
     with pytest.raises(SystemExit) as exc_info:
         main()

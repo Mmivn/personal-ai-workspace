@@ -291,3 +291,19 @@ def summarize(text: str, num_sentences: int = 3) -> str:
 
     selected.sort()  # restore original reading order
     return " ".join(sentences[i] for i in selected)
+
+
+def sentences_for_ratio(sentence_count: int, ratio: float) -> int:
+    """Return how many sentences to keep for a given length ratio.
+
+    Rounds up (so a summary is never shorter than the requested fraction)
+    and always returns at least 1, even for `sentence_count == 0` -- letting
+    the empty-text case fall through unchanged in `summarize`, which checks
+    for an empty document before it would matter which count was requested.
+
+    Raises:
+        ValueError: if `ratio` is not in (0, 1].
+    """
+    if not 0 < ratio <= 1:
+        raise ValueError("ratio must be greater than 0 and at most 1")
+    return max(1, math.ceil(sentence_count * ratio))
