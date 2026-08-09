@@ -53,6 +53,25 @@ def test_split_sentences_keeps_russian_reference_abbreviation_together() -> None
     ]
 
 
+def test_split_sentences_handles_quoted_sentences() -> None:
+    # A period immediately followed by a closing quote (not whitespace) must
+    # still be recognized as a sentence boundary, or the quoted sentence
+    # silently merges with the one that follows it.
+    text = 'She said "Hello." Then she left the room.'
+    assert split_sentences(text) == [
+        'She said "Hello."',
+        "Then she left the room.",
+    ]
+
+
+def test_split_sentences_handles_russian_guillemets() -> None:
+    text = "Он сказал: «Привет.» И ушёл домой."
+    assert split_sentences(text) == [
+        "Он сказал: «Привет.»",
+        "И ушёл домой.",
+    ]
+
+
 def test_split_sentences_still_splits_after_ambiguous_abbreviations() -> None:
     # "и т.д." ("etc.") is deliberately NOT suppressed -- it's usually
     # sentence-final in practice, so treating it as a boundary is correct

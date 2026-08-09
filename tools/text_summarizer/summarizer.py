@@ -134,7 +134,12 @@ _STOPWORDS = _ENGLISH_STOPWORDS | _RUSSIAN_STOPWORDS
 # sentence pairs (max observed: 0.5) trigger it.
 _REDUNDANCY_THRESHOLD = 0.6
 
-_SENTENCE_END_RE = re.compile(r"[.!?]+(?=\s)")
+# Sentence-ending punctuation, optionally followed by closing quote/bracket
+# characters (straight and curly quotes, Russian guillemets, parens), before
+# requiring whitespace. Without the optional closers, 'She said "Hello." Then
+# she left.' would never split -- the period is followed by a closing quote,
+# not whitespace, so the boundary would be missed entirely.
+_SENTENCE_END_RE = re.compile(r"[.!?]+['\"»”’)\]]*(?=\s)")
 _TRAILING_WORD_RE = re.compile(r"(\S+)$")
 _WORD_RE = re.compile(r"(?:[^\W_]|')+")
 
@@ -167,7 +172,10 @@ _SAFE_ABBREVIATIONS = frozenset(
 
 
 def split_sentences(text: str) -> list[str]:
-    """Split text into sentences on '.', '!', or '?' followed by whitespace.
+    """Split text into sentences on '.', '!', or '?' followed by whitespace,
+    allowing closing quotes/brackets ('"', '»', ')', ...) between the
+    punctuation and the whitespace so quoted sentences ('She said "Hi."
+    Then left.') split correctly instead of merging into one.
 
     Suppresses splits after single-letter initials ("А.", "J.") and a
     small list of title/reference abbreviations that are never real

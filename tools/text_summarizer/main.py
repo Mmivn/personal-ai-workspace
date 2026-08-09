@@ -37,8 +37,17 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    text = _read_input(args.file)
-    print(summarize(text, num_sentences=args.sentences))
+    try:
+        text = _read_input(args.file)
+        result = summarize(text, num_sentences=args.sentences)
+    except OSError as e:
+        print(f"Error reading input: {e}", file=sys.stderr)
+        sys.exit(1)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    print(result)
 
 
 if __name__ == "__main__":
