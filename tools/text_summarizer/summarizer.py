@@ -217,6 +217,25 @@ def _jaccard_similarity(a: set[str], b: set[str]) -> float:
     return len(a & b) / len(a | b)
 
 
+def _marginal_score(word_freq: Counter[str], words: set[str], covered: set[str]) -> float:
+    """Score a sentence's words by frequency, counting only words not
+    already `covered` by previously selected sentences, normalized by
+    sqrt(the sentence's total distinct word count).
+
+    Words already covered contribute nothing -- so a sentence that mostly
+    restates a theme already represented in the summary scores low, even
+    if that theme's words are individually high-frequency, encouraging
+    later picks to introduce new themes instead of reinforcing one already
+    covered. The sqrt denominator still uses the sentence's full word
+    count (not just the uncovered subset), keeping length normalization
+    independent of coverage.
+    """
+    if not words:
+        return 0.0
+    new_words = words - covered
+    return sum(word_freq[w] for w in new_words) / math.sqrt(len(words))
+
+
 def score_sentences(sentences: list[str]) -> list[float]:
     """Score each sentence by its distinct non-stopword words' frequency.
 
@@ -243,17 +262,23 @@ def score_sentences(sentences: list[str]) -> list[float]:
 
 
 def summarize(text: str, num_sentences: int = 3) -> str:
-    """Return the top `num_sentences` sentences from `text`, in original order.
+    """Return `num_sentences` sentences from `text` that best cover its
+    distinct themes, in original order.
 
-    Sentences are ranked by `score_sentences` (word-frequency based) and
-    selected greedily highest-first, skipping any sentence too similar
-    (see `_REDUNDANCY_THRESHOLD`) to one already selected, so a near-duplicate
-    sentence doesn't waste a slot that could cover more of the document. If
-    redundancy filtering can't fill all `num_sentences` slots (e.g. every
-    remaining candidate is a near-duplicate of one already picked), the
-    remaining slots are backfilled with the next highest-scoring sentences
-    regardless of similarity -- the output always has `num_sentences`
-    sentences whenever `text` has at least that many.
+    Sentences are selected greedily: at each step, the remaining sentence
+    with the highest *marginal* score (see `_marginal_score`) is picked --
+    a sentence's words already represented by a previously selected
+    sentence don't count again. This means a single dominant, frequently
+    repeated theme can win the first pick or two, but stops winning every
+    subsequent one just by virtue of being frequent, leaving room for
+    sentences that introduce genuinely different content. A candidate is
+    also skipped if it's too similar (see `_REDUNDANCY_THRESHOLD`) to a
+    sentence already selected, so near-duplicate sentences don't both take
+    a slot. If these two checks leave fewer than `num_sentences` selected
+    (e.g. every remaining candidate is redundant or fully covered), the
+    remaining slots are backfilled with the next highest marginal-scoring
+    sentences, ignoring both checks -- the output always has
+    `num_sentences` sentences whenever `text` has at least that many.
 
     If `text` has fewer sentences than `num_sentences`, the whole text is
     returned unchanged (sentence-split and rejoined).
@@ -270,24 +295,34 @@ def summarize(text: str, num_sentences: int = 3) -> str:
     if len(sentences) <= num_sentences:
         return " ".join(sentences)
 
-    scores = score_sentences(sentences)
     words = [_distinct_words(s) for s in sentences]
-    ranked = sorted(range(len(sentences)), key=lambda i: scores[i], reverse=True)
+    word_freq: Counter[str] = Counter()
+    for w in words:
+        word_freq.update(w)
 
     selected: list[int] = []
-    for i in ranked:
-        if len(selected) >= num_sentences:
-            break
-        if any(_jaccard_similarity(words[i], words[j]) >= _REDUNDANCY_THRESHOLD for j in selected):
-            continue  # too similar to an already-selected sentence
-        selected.append(i)
+    covered: set[str] = set()
+    remaining = set(range(len(sentences)))
 
-    if len(selected) < num_sentences:  # backfill: never return fewer than requested
-        for i in ranked:
-            if len(selected) >= num_sentences:
-                break
-            if i not in selected:
-                selected.append(i)
+    for enforce_redundancy_check in (True, False):  # 2nd pass is the backfill
+        while len(selected) < num_sentences and remaining:
+            best_i: int | None = None
+            best_score = -1.0
+            for i in sorted(remaining):
+                if enforce_redundancy_check and any(
+                    _jaccard_similarity(words[i], words[j]) >= _REDUNDANCY_THRESHOLD
+                    for j in selected
+                ):
+                    continue
+                s = _marginal_score(word_freq, words[i], covered)
+                if s > best_score:
+                    best_score = s
+                    best_i = i
+            if best_i is None:
+                break  # everything remaining is redundant; let the backfill pass handle it
+            selected.append(best_i)
+            covered |= words[best_i]
+            remaining.discard(best_i)
 
     selected.sort()  # restore original reading order
     return " ".join(sentences[i] for i in selected)

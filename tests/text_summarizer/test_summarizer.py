@@ -1,9 +1,12 @@
 """Tests for tools.text_summarizer.summarizer — pure functions, no I/O."""
 
+from collections import Counter
+
 import pytest
 
 from tools.text_summarizer.summarizer import (
     _jaccard_similarity,  # pyright: ignore[reportPrivateUsage]
+    _marginal_score,  # pyright: ignore[reportPrivateUsage]
     _tokenize,  # pyright: ignore[reportPrivateUsage]
     score_sentences,
     sentences_for_ratio,
@@ -104,9 +107,15 @@ def test_summarize_picks_top_n_in_original_order() -> None:
         "Many people love cats. Traffic was light this morning."
     )
     result = summarize(text, num_sentences=2)
-    # The two cat-related sentences share the repeated word "cats" and should
-    # outscore the others, but must come back in original reading order.
-    assert result == "Cats are wonderful pets. Many people love cats."
+    # "Many people love cats." scores highest and is picked first. The other
+    # cat sentence shares only "cats" with it, so once that word is covered,
+    # its marginal score drops below the weather/traffic sentences (which
+    # share nothing with the pick so far) -- the summary now covers two
+    # distinct themes instead of reinforcing the same one twice. This
+    # expectation intentionally changed from "both cat sentences" as part of
+    # the topic-diversity fix; see test_summarize_covers_minority_theme_*
+    # for the case this change was actually made to fix.
+    assert result == "The weather today is mild. Many people love cats."
 
 
 def test_summarize_empty_text() -> None:
@@ -136,9 +145,12 @@ def test_score_sentences_favors_repeated_cyrillic_words() -> None:
 def test_summarize_picks_top_n_cyrillic_in_original_order() -> None:
     text = "Кошки любят играть. Дождь идёт весь день. Кошки любят молоко. Птицы поют рано утром."
     result = summarize(text, num_sentences=2)
-    # The two cat sentences share repeated words ("кошки", "любят") and should
-    # outscore the others, but must come back in original reading order.
-    assert result == "Кошки любят играть. Кошки любят молоко."
+    # "Кошки любят играть." is picked first (tied highest, first in order).
+    # The other cat sentence shares "кошки"/"любят" with it, so its marginal
+    # score drops below the fully novel rain sentence once those words are
+    # covered -- same intentional diversity-over-repetition change as the
+    # English test above.
+    assert result == "Кошки любят играть. Дождь идёт весь день."
 
 
 def test_score_sentences_ignores_russian_stopwords() -> None:
@@ -242,3 +254,35 @@ def test_sentences_for_ratio_rejects_out_of_range_ratio() -> None:
     for bad_ratio in (0, -0.1, 1.1):
         with pytest.raises(ValueError):
             sentences_for_ratio(10, bad_ratio)
+
+
+def test_marginal_score_ignores_covered_words() -> None:
+    freq = Counter({"a": 3, "b": 2, "c": 1})
+    # No coverage: behaves like the plain frequency-sum-over-sqrt(len) score.
+    assert _marginal_score(freq, {"a", "b"}, covered=set()) == pytest.approx((3 + 2) / 2**0.5)
+    # "a" already covered: only "b"'s frequency counts, but still normalized
+    # by the sentence's full (2-word) length, not the 1 remaining word.
+    assert _marginal_score(freq, {"a", "b"}, covered={"a"}) == pytest.approx(2 / 2**0.5)
+    # Every word covered: no marginal content left, score is 0.
+    assert _marginal_score(freq, {"a", "b"}, covered={"a", "b"}) == 0.0
+    # Empty word set: 0, not a division-by-zero error.
+    assert _marginal_score(freq, set(), covered=set()) == 0.0
+
+
+def test_summarize_covers_minority_theme_instead_of_repeating_dominant_one() -> None:
+    # 4 of 5 sentences are about "музей" (museum); only one is about
+    # something else entirely ("билеты", tickets). The old static-ranking
+    # algorithm picked the 3 highest-scoring sentences independently and
+    # they were *all* museum sentences -- the tickets sentence never had a
+    # chance despite being a distinct, legitimate theme. This is the same
+    # failure mode as the real-user test (park construction/investment
+    # crowding out the health/wellbeing theme).
+    text = (
+        "Музей открылся в этом году. "
+        "Музей ежедневно принимает тысячи посетителей. "
+        "Экспозиция музея включает редкие экспонаты. "
+        "Билеты можно купить онлайн заранее. "
+        "Музей регулярно обновляет свою коллекцию."
+    )
+    result = summarize(text, num_sentences=3)
+    assert "Билеты можно купить онлайн заранее." in result
