@@ -1,138 +1,144 @@
-import requests
 import streamlit as st
-
-from main import qualify_lead
-
+import requests
+from datetime import date
 
 st.set_page_config(
-    page_title="Restaurant Lead Manager",
+    page_title="Restaurant Reservations",
     page_icon="🍽️",
     layout="centered",
 )
 
-
-def send_telegram_notification(name, phone, request_text, status):
-    bot_token = st.secrets["TELEGRAM_BOT_TOKEN"]
-    chat_id = st.secrets["TELEGRAM_CHAT_ID"]
-
-    if status == "HOT":
-        priority = "🔥 HIGH PRIORITY"
-        action = "Contact this customer immediately."
-    elif status == "WARM":
-        priority = "🟡 MEDIUM PRIORITY"
-        action = "Follow up with this customer."
-    else:
-        priority = "❄️ LOW PRIORITY"
-        action = "Keep this lead for future follow-up."
-
-    message = (
-        "🍽️ NEW RESTAURANT LEAD\n\n"
-        f"{priority}\n\n"
-        f"Customer: {name or 'Not provided'}\n"
-        f"Phone / WhatsApp: {phone or 'Not provided'}\n\n"
-        f"Request:\n{request_text}\n\n"
-        f"Lead status: {status}\n"
-        f"Recommended action: {action}"
-    )
-
-    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-
-    response = requests.post(
-        url,
-        json={
-            "chat_id": chat_id,
-            "text": message,
-        },
-        timeout=10,
-    )
-
-    response.raise_for_status()
-
-
-st.title("🍽️ Restaurant Lead Manager")
-
-st.subheader(
-    "Turn website inquiries into prioritized sales leads"
-)
-
+st.title("🍽️ Restaurant Reservations")
+st.subheader("Reservation & Private Event Request")
 st.write(
-    "When a customer submits an inquiry, the system analyzes "
-    "the request and immediately notifies the restaurant manager."
+    "Planning a dinner, celebration, or private event? "
+    "Send us your request and our team will contact you shortly."
 )
 
-with st.form("lead_form"):
-    name = st.text_input(
-        "Customer name",
-        placeholder="John Smith",
-    )
-
+with st.form("restaurant_request", clear_on_submit=False):
+    name = st.text_input("Your name *", placeholder="John Smith")
     phone = st.text_input(
-        "Phone or WhatsApp",
+        "Phone or WhatsApp *",
         placeholder="+1 555 123 4567",
     )
 
+    col1, col2 = st.columns(2)
+    with col1:
+        visit_date = st.date_input(
+            "Preferred date",
+            value=date.today(),
+        )
+    with col2:
+        guests = st.number_input(
+            "Number of guests",
+            min_value=1,
+            max_value=500,
+            value=2,
+            step=1,
+        )
+
     request_text = st.text_area(
-        "Customer request",
+        "Tell us about your request *",
         placeholder=(
-            "Example: We need a private dinner for 25 people "
-            "this Friday. Please call me ASAP."
+            "Example: We would like a private dinner for 25 people "
+            "this Friday evening."
         ),
-        height=160,
+        height=140,
     )
 
     submitted = st.form_submit_button(
-        "Send inquiry"
+        "Send request",
+        use_container_width=True,
     )
 
-if submitted:
-    if not request_text.strip():
-        st.warning(
-            "Please enter the customer's request."
+
+def classify_lead(text, guest_count):
+    text = text.lower()
+
+    hot_words = [
+        "urgent",
+        "asap",
+        "today",
+        "tonight",
+        "private",
+        "event",
+        "wedding",
+        "birthday",
+        "corporate",
+        "celebration",
+    ]
+
+    if guest_count >= 10 or any(word in text for word in hot_words):
+        return "HOT"
+
+    if guest_count >= 5:
+        return "WARM"
+
+    return "COLD"
+
+
+def send_telegram(message):
+    try:
+        token = st.secrets["TELEGRAM_BOT_TOKEN"]
+        chat_id = st.secrets["TELEGRAM_CHAT_ID"]
+
+        response = requests.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            data={
+                "chat_id": chat_id,
+                "text": message,
+            },
+            timeout=10,
         )
 
+        return response.ok
+    except Exception:
+        return False
+
+
+if submitted:
+    if not name.strip() or not phone.strip() or not request_text.strip():
+        st.error("Please complete your name, contact details, and request.")
     else:
-        status = qualify_lead(request_text)
+        priority = classify_lead(request_text, guests)
+
+        icons = {
+            "HOT": "🔥",
+            "WARM": "🟠",
+            "COLD": "❄️",
+        }
+
+        manager_message = f"""
+{icons[priority]} NEW RESTAURANT REQUEST — {priority}
+
+Customer: {name}
+Phone / WhatsApp: {phone}
+Date: {visit_date.strftime("%d %B %Y")}
+Guests: {guests}
+
+Request:
+{request_text}
+
+Priority: {priority}
+"""
+
+        notified = send_telegram(manager_message)
 
         st.divider()
-        st.subheader("Request received")
+        st.success("Thank you! Your request has been received.")
+        st.write(
+            "The restaurant team will review your request "
+            "and contact you shortly."
+        )
 
-        if status == "HOT":
-            st.error("🔥 High-priority customer")
-            st.write(
-                "The restaurant manager should contact "
-                "this customer immediately."
+        if not notified:
+            st.warning(
+                "Your request was received, but the manager notification "
+                "could not be delivered."
             )
 
-        elif status == "WARM":
-            st.warning("🟡 Medium-priority customer")
-            st.write(
-                "The restaurant should follow up with "
-                "this customer."
-            )
-
-        else:
-            st.info("❄️ Low-priority customer")
-            st.write(
-                "The request can be handled as a normal "
-                "follow-up."
-            )
-
-        try:
-            send_telegram_notification(
-                name,
-                phone,
-                request_text,
-                status,
-            )
-
-            st.success(
-                "✅ The restaurant manager has been notified."
-            )
-
-        except requests.RequestException as error:
-            st.error(
-                "The request was analyzed, but the manager "
-                "notification could not be sent."
-            )
-
-            st.caption(str(error))
+st.divider()
+st.caption(
+    "For urgent same-day requests, please include your preferred time "
+    "and contact number."
+)
