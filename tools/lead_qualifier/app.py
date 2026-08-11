@@ -4,29 +4,261 @@ from datetime import date
 
 
 # =========================================================
-# RESTAURANT SETTINGS
-# For another restaurant, change these values.
+# FAMILY SECRET — SETTINGS
 # =========================================================
 
 RESTAURANT_NAME = "FAMILY SECRET"
-RESTAURANT_TAGLINE = "Table Reservations & Private Events"
-
+TAGLINE = "RESTAURANT • PRIVATE DINING • EVENTS"
 HOT_GUEST_THRESHOLD = 10
 
 
 # =========================================================
-# PAGE
+# PAGE SETTINGS
 # =========================================================
 
 st.set_page_config(
-    page_title=f"{RESTAURANT_NAME} | Reservations",
-    page_icon="🍽️",
+    page_title="FAMILY SECRET | Reservations",
+    page_icon="✦",
     layout="centered",
+    initial_sidebar_state="collapsed",
 )
 
 
 # =========================================================
-# LEAD PRIORITY
+# PREMIUM DESIGN
+# =========================================================
+
+st.markdown(
+    """
+    <style>
+
+    /* Main background */
+    .stApp {
+        background:
+            radial-gradient(
+                circle at 50% -10%,
+                #29251f 0%,
+                #151412 35%,
+                #090909 75%
+            );
+        color: #f4efe6;
+    }
+
+    /* Hide Streamlit decoration */
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent;
+    }
+
+    /* Main content width */
+    .block-container {
+        max-width: 900px;
+        padding-top: 2rem;
+        padding-bottom: 5rem;
+    }
+
+    /* HERO */
+    .hero {
+        text-align: center;
+        padding: 75px 20px 55px 20px;
+    }
+
+    .hero-symbol {
+        color: #c8a96b;
+        font-size: 25px;
+        letter-spacing: 8px;
+        margin-bottom: 22px;
+    }
+
+    .hero-title {
+        color: #f7f0e5;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 64px;
+        font-weight: 400;
+        letter-spacing: 10px;
+        line-height: 1.05;
+        margin-bottom: 22px;
+    }
+
+    .hero-tagline {
+        color: #c8a96b;
+        font-size: 12px;
+        letter-spacing: 5px;
+        font-weight: 600;
+        margin-bottom: 35px;
+    }
+
+    .hero-description {
+        color: #bcb6ad;
+        max-width: 570px;
+        margin: auto;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 19px;
+        line-height: 1.7;
+        font-style: italic;
+    }
+
+    .gold-line {
+        width: 70px;
+        height: 1px;
+        background: #c8a96b;
+        margin: 45px auto 0 auto;
+    }
+
+    /* Reservation card */
+    .reservation-header {
+        text-align: center;
+        margin-top: 45px;
+        margin-bottom: 30px;
+    }
+
+    .reservation-title {
+        color: #f7f0e5;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 34px;
+        letter-spacing: 2px;
+    }
+
+    .reservation-subtitle {
+        color: #99938a;
+        font-size: 14px;
+        margin-top: 10px;
+    }
+
+    /* Labels */
+    label,
+    .stMarkdown,
+    p {
+        color: #d9d3c9;
+    }
+
+    div[data-testid="stTextInput"] label,
+    div[data-testid="stTextArea"] label,
+    div[data-testid="stDateInput"] label,
+    div[data-testid="stTimeInput"] label,
+    div[data-testid="stNumberInput"] label {
+        color: #c8a96b !important;
+        font-size: 12px !important;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+
+    /* Inputs */
+    div[data-baseweb="input"] > div,
+    div[data-baseweb="textarea"] > div {
+        background-color: #151515 !important;
+        border: 1px solid #39352f !important;
+        border-radius: 4px !important;
+    }
+
+    input,
+    textarea {
+        color: #f4efe6 !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #716d67 !important;
+    }
+
+    /* Form */
+    div[data-testid="stForm"] {
+        background: rgba(20, 20, 19, 0.92);
+        border: 1px solid #302d28;
+        border-radius: 8px;
+        padding: 35px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Gold button */
+    div[data-testid="stFormSubmitButton"] button {
+        background: #b8965d !important;
+        color: #0d0d0d !important;
+        border: 1px solid #c8a96b !important;
+        border-radius: 3px !important;
+        min-height: 52px;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+
+    div[data-testid="stFormSubmitButton"] button:hover {
+        background: #d0b274 !important;
+        border-color: #d0b274 !important;
+        color: #000000 !important;
+    }
+
+    /* Divider */
+    hr {
+        border-color: #302d28 !important;
+    }
+
+    /* Footer */
+    .custom-footer {
+        text-align: center;
+        color: #777169;
+        padding-top: 50px;
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+
+    .footer-brand {
+        color: #b8965d;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 18px;
+        letter-spacing: 4px;
+        margin-bottom: 8px;
+    }
+
+    /* Mobile */
+    @media (max-width: 700px) {
+
+        .block-container {
+            padding-left: 18px;
+            padding-right: 18px;
+            padding-top: 0.5rem;
+        }
+
+        .hero {
+            padding-top: 55px;
+            padding-bottom: 35px;
+        }
+
+        .hero-title {
+            font-size: 39px;
+            letter-spacing: 5px;
+        }
+
+        .hero-tagline {
+            font-size: 9px;
+            letter-spacing: 2px;
+        }
+
+        .hero-description {
+            font-size: 16px;
+        }
+
+        div[data-testid="stForm"] {
+            padding: 22px;
+        }
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# =========================================================
+# PRIORITY ENGINE
 # =========================================================
 
 def qualify_request(message, guests):
@@ -88,7 +320,7 @@ def send_telegram(
         priority_text = "🔔 NORMAL REQUEST"
         action = "Confirm availability with the guest."
 
-    message = f"""🍽️ {RESTAURANT_NAME}
+    message = f"""✦ FAMILY SECRET ✦
 NEW RESERVATION REQUEST
 
 {priority_text}
@@ -120,29 +352,68 @@ NEW RESERVATION REQUEST
 
 
 # =========================================================
-# CUSTOMER INTERFACE
+# HERO
 # =========================================================
 
-st.title(f"🍽️ {RESTAURANT_NAME}")
+st.markdown(
+    """
+    <div class="hero">
 
-st.subheader(RESTAURANT_TAGLINE)
+        <div class="hero-symbol">
+            ✦
+        </div>
 
-st.write(
-    "Reserve your table or send us a request for a celebration, "
-    "group dinner or private event."
+        <div class="hero-title">
+            FAMILY<br>SECRET
+        </div>
+
+        <div class="hero-tagline">
+            RESTAURANT • PRIVATE DINING • EVENTS
+        </div>
+
+        <div class="hero-description">
+            Good food brings people together.<br>
+            Great evenings become family secrets.
+        </div>
+
+        <div class="gold-line"></div>
+
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
 
-st.divider()
+
+# =========================================================
+# RESERVATION
+# =========================================================
+
+st.markdown(
+    """
+    <div class="reservation-header">
+        <div class="reservation-title">
+            Reserve Your Table
+        </div>
+
+        <div class="reservation-subtitle">
+            Send us your request and our team will contact you
+            to confirm your reservation.
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 with st.form("reservation_form"):
 
     name = st.text_input(
-        "Your name *",
+        "Your name",
         placeholder="John Smith",
     )
 
     contact = st.text_input(
-        "Phone or WhatsApp *",
+        "Phone or WhatsApp",
         placeholder="+1 555 123 4567",
     )
 
@@ -150,17 +421,17 @@ with st.form("reservation_form"):
 
     with col1:
         reservation_date = st.date_input(
-            "Reservation date *",
+            "Reservation date",
             min_value=date.today(),
         )
 
     with col2:
         reservation_time = st.time_input(
-            "Preferred time *",
+            "Preferred time",
         )
 
     guests = st.number_input(
-        "Number of guests *",
+        "Number of guests",
         min_value=1,
         max_value=200,
         value=2,
@@ -170,17 +441,21 @@ with st.form("reservation_form"):
     request_text = st.text_area(
         "Special requests",
         placeholder=(
-            "Birthday, private event, dietary requirements, "
-            "children, special occasion..."
+            "Birthday, private dining, dietary requirements, "
+            "children or a special occasion..."
         ),
         height=120,
     )
 
     submitted = st.form_submit_button(
-        "Request a reservation",
+        "Request Reservation",
         use_container_width=True,
     )
 
+
+# =========================================================
+# FORM RESULT
+# =========================================================
 
 if submitted:
 
@@ -214,17 +489,12 @@ if submitted:
             )
 
             st.success(
-                "✅ Thank you! Your reservation request has been received."
+                "Your reservation request has been received."
             )
 
             st.write(
-                f"The {RESTAURANT_NAME} team will contact you "
-                "shortly to confirm availability."
-            )
-
-            st.info(
-                "Your reservation is confirmed only after "
-                "our team contacts you."
+                "The FAMILY SECRET team will contact you shortly "
+                "to confirm availability."
             )
 
         except requests.RequestException:
@@ -241,8 +511,30 @@ if submitted:
             )
 
 
-st.divider()
+# =========================================================
+# FOOTER
+# =========================================================
 
-st.caption(
-    f"© {RESTAURANT_NAME} • Reservations & Private Events"
+st.markdown(
+    """
+    <div class="custom-footer">
+
+        <div class="footer-brand">
+            FAMILY SECRET
+        </div>
+
+        RESERVATIONS • PRIVATE DINING • SPECIAL EVENTS
+
+        <br><br>
+
+        Reservations are confirmed after our team contacts you.
+
+    </div>
+    """,
+    unsafe_allow_html=True,
 )
+
+
+# =========================================================
+# END
+# =========================================================
