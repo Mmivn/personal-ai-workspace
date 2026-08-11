@@ -1,27 +1,68 @@
-import streamlit as st
 import requests
+import streamlit as st
 from datetime import date
 
+
+# =========================================================
+# RESTAURANT SETTINGS
+# For another restaurant, change these values.
+# =========================================================
+
+RESTAURANT_NAME = "FAMILY SECRET"
+RESTAURANT_TAGLINE = "Table Reservations & Private Events"
+
+HOT_GUEST_THRESHOLD = 10
+
+
+# =========================================================
+# PAGE
+# =========================================================
+
 st.set_page_config(
-    page_title="Restaurant Reservations",
+    page_title=f"{RESTAURANT_NAME} | Reservations",
     page_icon="🍽️",
     layout="centered",
 )
 
-def qualify_lead(message, guests):
+
+# =========================================================
+# LEAD PRIORITY
+# =========================================================
+
+def qualify_request(message, guests):
     text = message.lower()
 
-    urgent_words = [
-        "urgent", "asap", "today", "tonight",
-        "private", "event", "birthday",
-        "wedding", "corporate",
+    high_value_words = [
+        "urgent",
+        "asap",
+        "today",
+        "tonight",
+        "private",
+        "private room",
+        "event",
+        "birthday",
+        "wedding",
+        "corporate",
+        "anniversary",
+        "celebration",
+        "party",
     ]
 
-    if guests >= 10 or any(word in text for word in urgent_words):
+    if guests >= HOT_GUEST_THRESHOLD:
         return "HOT"
+
+    if any(word in text for word in high_value_words):
+        return "HOT"
+
+    if guests >= 5:
+        return "WARM"
 
     return "NORMAL"
 
+
+# =========================================================
+# TELEGRAM
+# =========================================================
 
 def send_telegram(
     name,
@@ -35,15 +76,22 @@ def send_telegram(
     token = st.secrets["TELEGRAM_BOT_TOKEN"]
     chat_id = st.secrets["TELEGRAM_CHAT_ID"]
 
-    priority_line = (
-        "🔥 HIGH PRIORITY"
-        if priority == "HOT"
-        else "🔔 NEW REQUEST"
-    )
+    if priority == "HOT":
+        priority_text = "🔥 HIGH PRIORITY"
+        action = "Contact this guest as soon as possible."
 
-    message = f"""🍽️ NEW RESTAURANT RESERVATION
+    elif priority == "WARM":
+        priority_text = "🟠 MEDIUM PRIORITY"
+        action = "Follow up with this guest."
 
-{priority_line}
+    else:
+        priority_text = "🔔 NORMAL REQUEST"
+        action = "Confirm availability with the guest."
+
+    message = f"""🍽️ {RESTAURANT_NAME}
+NEW RESERVATION REQUEST
+
+{priority_text}
 
 👤 Guest: {name}
 📱 Phone / WhatsApp: {contact}
@@ -52,10 +100,11 @@ def send_telegram(
 🕐 Time: {reservation_time}
 👥 Guests: {guests}
 
-💬 Customer request:
-{request_text or "No additional request"}
+💬 Special requests:
+{request_text or "None"}
 
-➡️ Please contact the guest to confirm the reservation.
+📌 Recommended action:
+{action}
 """
 
     response = requests.post(
@@ -70,24 +119,30 @@ def send_telegram(
     response.raise_for_status()
 
 
-st.title("🍽️ Restaurant Reservations")
+# =========================================================
+# CUSTOMER INTERFACE
+# =========================================================
 
-st.subheader("Reserve your table")
+st.title(f"🍽️ {RESTAURANT_NAME}")
+
+st.subheader(RESTAURANT_TAGLINE)
 
 st.write(
-    "Send your reservation request and our restaurant team "
-    "will contact you to confirm availability."
+    "Reserve your table or send us a request for a celebration, "
+    "group dinner or private event."
 )
+
+st.divider()
 
 with st.form("reservation_form"):
 
     name = st.text_input(
-        "Your name",
+        "Your name *",
         placeholder="John Smith",
     )
 
     contact = st.text_input(
-        "Phone or WhatsApp",
+        "Phone or WhatsApp *",
         placeholder="+1 555 123 4567",
     )
 
@@ -95,17 +150,17 @@ with st.form("reservation_form"):
 
     with col1:
         reservation_date = st.date_input(
-            "Date",
+            "Reservation date *",
             min_value=date.today(),
         )
 
     with col2:
         reservation_time = st.time_input(
-            "Time",
+            "Preferred time *",
         )
 
     guests = st.number_input(
-        "Number of guests",
+        "Number of guests *",
         min_value=1,
         max_value=200,
         value=2,
@@ -115,7 +170,7 @@ with st.form("reservation_form"):
     request_text = st.text_area(
         "Special requests",
         placeholder=(
-            "Birthday, private room, dietary requirements, "
+            "Birthday, private event, dietary requirements, "
             "children, special occasion..."
         ),
         height=120,
@@ -137,7 +192,7 @@ if submitted:
 
     else:
 
-        priority = qualify_lead(
+        priority = qualify_request(
             request_text,
             int(guests),
         )
@@ -147,33 +202,47 @@ if submitted:
             send_telegram(
                 name=name,
                 contact=contact,
-                reservation_date=reservation_date.strftime("%d %B %Y"),
-                reservation_time=reservation_time.strftime("%H:%M"),
+                reservation_date=reservation_date.strftime(
+                    "%d %B %Y"
+                ),
+                reservation_time=reservation_time.strftime(
+                    "%H:%M"
+                ),
                 guests=int(guests),
                 request_text=request_text,
                 priority=priority,
             )
 
             st.success(
-                "✅ Reservation request received!"
+                "✅ Thank you! Your reservation request has been received."
+            )
+
+            st.write(
+                f"The {RESTAURANT_NAME} team will contact you "
+                "shortly to confirm availability."
             )
 
             st.info(
-                "The restaurant will contact you shortly "
-                "to confirm your reservation."
+                "Your reservation is confirmed only after "
+                "our team contacts you."
             )
 
-        except Exception:
+        except requests.RequestException:
 
             st.error(
-                "We couldn't send your reservation request. "
-                "Please try again."
+                "We couldn't send your request right now. "
+                "Please try again in a moment."
+            )
+
+        except KeyError:
+
+            st.error(
+                "Reservation notifications are temporarily unavailable."
             )
 
 
 st.divider()
 
 st.caption(
-    "Reservations are confirmed only after the restaurant "
-    "contacts you."
+    f"© {RESTAURANT_NAME} • Reservations & Private Events"
 )
