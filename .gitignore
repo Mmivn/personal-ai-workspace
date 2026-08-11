@@ -9,3 +9,4 @@ build/
 *.log
 
 .streamlit/secrets.toml
+api_test.py
