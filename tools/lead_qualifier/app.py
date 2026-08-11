@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from datetime import date
 
 st.set_page_config(
     page_title="Restaurant Reservations",
@@ -8,137 +7,118 @@ st.set_page_config(
     layout="centered",
 )
 
-st.title("🍽️ Restaurant Reservations")
-st.subheader("Reservation & Private Event Request")
-st.write(
-    "Planning a dinner, celebration, or private event? "
-    "Send us your request and our team will contact you shortly."
-)
+def qualify_lead(text):
+    text = text.lower()
 
-with st.form("restaurant_request", clear_on_submit=False):
-    name = st.text_input("Your name *", placeholder="John Smith")
-    phone = st.text_input(
-        "Phone or WhatsApp *",
-        placeholder="+1 555 123 4567",
+    hot_words = [
+        "urgent", "as soon as possible", "asap",
+        "today", "tonight", "tomorrow",
+        "large group", "private dinner",
+        "birthday", "wedding", "event",
+        "20 people", "25 people", "30 people",
+        "50 people", "100 people",
+    ]
+
+    if any(word in text for word in hot_words):
+        return "HOT"
+
+    return "NORMAL"
+
+
+def send_telegram(name, contact, request_text, priority):
+    token = st.secrets["TELEGRAM_BOT_TOKEN"]
+    chat_id = st.secrets["TELEGRAM_CHAT_ID"]
+
+    icon = "🔥" if priority == "HOT" else "🔔"
+
+    message = f"""
+{icon} NEW RESTAURANT INQUIRY
+
+Priority: {priority}
+
+👤 Customer: {name}
+📞 Contact: {contact}
+
+📝 Request:
+{request_text}
+
+Please contact the customer as soon as possible.
+"""
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+
+    response = requests.post(
+        url,
+        data={
+            "chat_id": chat_id,
+            "text": message,
+        },
+        timeout=10,
     )
 
-    col1, col2 = st.columns(2)
-    with col1:
-        visit_date = st.date_input(
-            "Preferred date",
-            value=date.today(),
-        )
-    with col2:
-        guests = st.number_input(
-            "Number of guests",
-            min_value=1,
-            max_value=500,
-            value=2,
-            step=1,
-        )
+    response.raise_for_status()
+
+
+st.title("🍽️ Restaurant Reservations")
+st.subheader("Planning a dinner, celebration or group event?")
+
+st.write(
+    "Send us your request and the restaurant team will contact you directly."
+)
+
+with st.form("reservation_form"):
+
+    name = st.text_input(
+        "Your name",
+        placeholder="John Smith"
+    )
+
+    contact = st.text_input(
+        "Phone or WhatsApp",
+        placeholder="+1 555 123 4567"
+    )
 
     request_text = st.text_area(
-        "Tell us about your request *",
+        "Tell us what you need",
         placeholder=(
-            "Example: We would like a private dinner for 25 people "
-            "this Friday evening."
+            "Example: We need a private dinner for 25 people "
+            "this Friday at 7 PM."
         ),
-        height=140,
+        height=150,
     )
 
     submitted = st.form_submit_button(
         "Send request",
-        use_container_width=True,
+        use_container_width=True
     )
 
-
-def classify_lead(text, guest_count):
-    text = text.lower()
-
-    hot_words = [
-        "urgent",
-        "asap",
-        "today",
-        "tonight",
-        "private",
-        "event",
-        "wedding",
-        "birthday",
-        "corporate",
-        "celebration",
-    ]
-
-    if guest_count >= 10 or any(word in text for word in hot_words):
-        return "HOT"
-
-    if guest_count >= 5:
-        return "WARM"
-
-    return "COLD"
-
-
-def send_telegram(message):
-    try:
-        token = st.secrets["TELEGRAM_BOT_TOKEN"]
-        chat_id = st.secrets["TELEGRAM_CHAT_ID"]
-
-        response = requests.post(
-            f"https://api.telegram.org/bot{token}/sendMessage",
-            data={
-                "chat_id": chat_id,
-                "text": message,
-            },
-            timeout=10,
-        )
-
-        return response.ok
-    except Exception:
-        return False
-
-
 if submitted:
-    if not name.strip() or not phone.strip() or not request_text.strip():
-        st.error("Please complete your name, contact details, and request.")
+
+    if not name or not contact or not request_text:
+        st.warning("Please complete all fields.")
+
     else:
-        priority = classify_lead(request_text, guests)
+        priority = qualify_lead(request_text)
 
-        icons = {
-            "HOT": "🔥",
-            "WARM": "🟠",
-            "COLD": "❄️",
-        }
-
-        manager_message = f"""
-{icons[priority]} NEW RESTAURANT REQUEST — {priority}
-
-Customer: {name}
-Phone / WhatsApp: {phone}
-Date: {visit_date.strftime("%d %B %Y")}
-Guests: {guests}
-
-Request:
-{request_text}
-
-Priority: {priority}
-"""
-
-        notified = send_telegram(manager_message)
-
-        st.divider()
-        st.success("Thank you! Your request has been received.")
-        st.write(
-            "The restaurant team will review your request "
-            "and contact you shortly."
-        )
-
-        if not notified:
-            st.warning(
-                "Your request was received, but the manager notification "
-                "could not be delivered."
+        try:
+            send_telegram(
+                name,
+                contact,
+                request_text,
+                priority
             )
 
-st.divider()
-st.caption(
-    "For urgent same-day requests, please include your preferred time "
-    "and contact number."
-)
+            st.success(
+                "✅ Thank you! Your request has been sent to the restaurant."
+            )
+
+            st.info(
+                "The restaurant team will contact you using the phone "
+                "or WhatsApp number you provided."
+            )
+
+        except Exception:
+            st.error(
+                "We couldn't send your request right now. "
+                "Please try again in a moment."
+            )
