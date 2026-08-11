@@ -4,17 +4,9 @@ import requests
 import streamlit as st
 
 
-# ============================================================
-# FAMILY SECRET SETTINGS
-# ============================================================
-
 RESTAURANT_NAME = "FAMILY SECRET"
 HOT_GUEST_THRESHOLD = 10
 
-
-# ============================================================
-# PAGE
-# ============================================================
 
 st.set_page_config(
     page_title="FAMILY SECRET | Reservations",
@@ -24,17 +16,12 @@ st.set_page_config(
 )
 
 
-# ============================================================
-# DESIGN
-# ============================================================
-
 st.markdown(
     """
 <style>
 :root {
     --bg: #090909;
     --card: #121211;
-    --card-2: #171613;
     --gold: #c5a263;
     --gold-light: #dfc083;
     --text: #f4efe7;
@@ -66,7 +53,7 @@ footer {
     padding-bottom: 5rem;
 }
 
-/* Hero */
+/* HERO */
 
 .fs-hero {
     text-align: center;
@@ -114,7 +101,7 @@ footer {
     margin: 44px auto 0 auto;
 }
 
-/* Reservation heading */
+/* RESERVATION TITLE */
 
 .fs-reservation {
     text-align: center;
@@ -136,7 +123,7 @@ footer {
     margin: 12px auto 0 auto;
 }
 
-/* Form */
+/* FORM CARD */
 
 div[data-testid="stForm"] {
     background:
@@ -146,6 +133,8 @@ div[data-testid="stForm"] {
     padding: 36px;
     box-shadow: 0 24px 70px rgba(0,0,0,.30);
 }
+
+/* LABELS */
 
 div[data-testid="stTextInput"] label,
 div[data-testid="stTextArea"] label,
@@ -159,22 +148,40 @@ div[data-testid="stNumberInput"] label {
     text-transform: uppercase;
 }
 
+/* INPUT BACKGROUNDS */
+
 div[data-baseweb="input"] > div,
 div[data-baseweb="textarea"] > div {
-    background-color: #0e0e0d !important;
-    border: 1px solid #403a30 !important;
+    background-color: #f4f1eb !important;
+    border: 1px solid #b8aa92 !important;
     border-radius: 5px !important;
 }
 
-input,
-textarea {
-    color: var(--text) !important;
+/* CRITICAL FIX: TYPED TEXT VISIBILITY */
+
+div[data-baseweb="input"] input,
+div[data-baseweb="textarea"] textarea,
+div[data-testid="stTextInput"] input,
+div[data-testid="stNumberInput"] input,
+div[data-testid="stDateInput"] input,
+div[data-testid="stTimeInput"] input {
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+    caret-color: #111111 !important;
+    opacity: 1 !important;
+    font-weight: 500 !important;
 }
 
-input::placeholder,
-textarea::placeholder {
-    color: #716c65 !important;
+/* PLACEHOLDERS */
+
+div[data-baseweb="input"] input::placeholder,
+div[data-baseweb="textarea"] textarea::placeholder {
+    color: #777777 !important;
+    -webkit-text-fill-color: #777777 !important;
+    opacity: 1 !important;
 }
+
+/* BUTTON */
 
 div[data-testid="stFormSubmitButton"] button {
     background: linear-gradient(90deg, #ad8b53, #c9a867) !important;
@@ -193,13 +200,13 @@ div[data-testid="stFormSubmitButton"] button:hover {
     border-color: #ecd18f !important;
 }
 
-/* Messages */
+/* ALERTS */
 
 div[data-testid="stAlert"] {
     border-radius: 6px;
 }
 
-/* Footer */
+/* FOOTER */
 
 .fs-footer {
     text-align: center;
@@ -226,7 +233,7 @@ div[data-testid="stAlert"] {
     margin-top: 20px;
 }
 
-/* Mobile */
+/* MOBILE */
 
 @media (max-width: 700px) {
     .block-container {
@@ -264,10 +271,6 @@ div[data-testid="stAlert"] {
 )
 
 
-# ============================================================
-# PRIORITY ENGINE
-# ============================================================
-
 def qualify_request(message: str, guests: int) -> str:
     text = message.lower()
 
@@ -299,10 +302,6 @@ def qualify_request(message: str, guests: int) -> str:
     return "NORMAL"
 
 
-# ============================================================
-# TELEGRAM
-# ============================================================
-
 def send_telegram(
     name: str,
     contact: str,
@@ -312,7 +311,6 @@ def send_telegram(
     request_text: str,
     priority: str,
 ) -> None:
-
     token = st.secrets["TELEGRAM_BOT_TOKEN"]
     chat_id = st.secrets["TELEGRAM_CHAT_ID"]
 
@@ -355,10 +353,6 @@ def send_telegram(
     response.raise_for_status()
 
 
-# ============================================================
-# HERO
-# ============================================================
-
 hero_html = (
     '<section class="fs-hero">'
     '<div class="fs-mark">✦</div>'
@@ -375,10 +369,6 @@ hero_html = (
 st.markdown(hero_html, unsafe_allow_html=True)
 
 
-# ============================================================
-# RESERVATION INTRO
-# ============================================================
-
 reservation_intro = (
     '<section class="fs-reservation">'
     '<div class="fs-reservation-title">Reserve Your Table</div>'
@@ -392,12 +382,7 @@ reservation_intro = (
 st.markdown(reservation_intro, unsafe_allow_html=True)
 
 
-# ============================================================
-# FORM
-# ============================================================
-
 with st.form("family_secret_reservation"):
-
     name = st.text_input(
         "Your name",
         placeholder="John Smith",
@@ -444,27 +429,19 @@ with st.form("family_secret_reservation"):
     )
 
 
-# ============================================================
-# SUBMISSION
-# ============================================================
-
 if submitted:
-
     if not name.strip() or not contact.strip():
-
         st.warning(
             "Please enter your name and phone or WhatsApp number."
         )
 
     else:
-
         priority = qualify_request(
             request_text,
             int(guests),
         )
 
         try:
-
             send_telegram(
                 name=name,
                 contact=contact,
@@ -485,22 +462,16 @@ if submitted:
             )
 
         except requests.RequestException:
-
             st.error(
                 "We couldn't send your request right now. "
                 "Please try again in a moment."
             )
 
         except KeyError:
-
             st.error(
                 "Reservation notifications are temporarily unavailable."
             )
 
-
-# ============================================================
-# FOOTER
-# ============================================================
 
 footer_html = (
     '<footer class="fs-footer">'
