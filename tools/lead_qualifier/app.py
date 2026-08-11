@@ -127,9 +127,11 @@ st.markdown(
     }
 
     .reservation-subtitle {
-        color: #99938a;
-        font-size: 14px;
-        margin-top: 10px;
+        color: #a9a197 !important;
+        font-size: 15px !important;
+        line-height: 1.7 !important;
+        margin: 12px auto 0 auto !important;
+        max-width: 560px;
     }
 
     /* Labels */
@@ -391,14 +393,11 @@ st.markdown(
 st.markdown(
     """
     <div class="reservation-header">
-        <div class="reservation-title">
-            Reserve Your Table
-        </div>
-
-        <div class="reservation-subtitle">
+        <div class="reservation-title">Reserve Your Table</div>
+        <p class="reservation-subtitle">
             Send us your request and our team will contact you
             to confirm your reservation.
-        </div>
+        </p>
     </div>
     """,
     unsafe_allow_html=True,
