@@ -53,8 +53,6 @@ footer {
     padding-bottom: 5rem;
 }
 
-/* HERO */
-
 .fs-hero {
     text-align: center;
     padding: 75px 20px 55px 20px;
@@ -80,18 +78,18 @@ footer {
     color: var(--gold);
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 5px;
+    letter-spacing: 3px;
     margin-top: 24px;
 }
 
 .fs-copy {
     color: #c4bdb3;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 19px;
+    font-size: 18px;
     font-style: italic;
     line-height: 1.7;
     margin: 34px auto 0 auto;
-    max-width: 560px;
+    max-width: 620px;
 }
 
 .fs-line {
@@ -101,8 +99,6 @@ footer {
     margin: 44px auto 0 auto;
 }
 
-/* RESERVATION TITLE */
-
 .fs-reservation {
     text-align: center;
     margin: 30px 0 30px 0;
@@ -111,19 +107,17 @@ footer {
 .fs-reservation-title {
     color: var(--text);
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 35px;
-    letter-spacing: 2px;
+    font-size: 33px;
+    letter-spacing: 1px;
 }
 
 .fs-reservation-copy {
     color: var(--muted);
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.7;
-    max-width: 560px;
+    max-width: 620px;
     margin: 12px auto 0 auto;
 }
-
-/* FORM CARD */
 
 div[data-testid="stForm"] {
     background:
@@ -134,8 +128,6 @@ div[data-testid="stForm"] {
     box-shadow: 0 24px 70px rgba(0,0,0,.30);
 }
 
-/* LABELS */
-
 div[data-testid="stTextInput"] label,
 div[data-testid="stTextArea"] label,
 div[data-testid="stDateInput"] label,
@@ -144,11 +136,9 @@ div[data-testid="stNumberInput"] label {
     color: #d6c7ae !important;
     font-size: 11px !important;
     font-weight: 700 !important;
-    letter-spacing: 2px;
+    letter-spacing: 1.4px;
     text-transform: uppercase;
 }
-
-/* INPUT BACKGROUNDS */
 
 div[data-baseweb="input"] > div,
 div[data-baseweb="textarea"] > div {
@@ -156,8 +146,6 @@ div[data-baseweb="textarea"] > div {
     border: 1px solid #b8aa92 !important;
     border-radius: 5px !important;
 }
-
-/* CRITICAL FIX: TYPED TEXT VISIBILITY */
 
 div[data-baseweb="input"] input,
 div[data-baseweb="textarea"] textarea,
@@ -172,16 +160,12 @@ div[data-testid="stTimeInput"] input {
     font-weight: 500 !important;
 }
 
-/* PLACEHOLDERS */
-
 div[data-baseweb="input"] input::placeholder,
 div[data-baseweb="textarea"] textarea::placeholder {
     color: #777777 !important;
     -webkit-text-fill-color: #777777 !important;
     opacity: 1 !important;
 }
-
-/* BUTTON */
 
 div[data-testid="stFormSubmitButton"] button {
     background: linear-gradient(90deg, #ad8b53, #c9a867) !important;
@@ -191,7 +175,7 @@ div[data-testid="stFormSubmitButton"] button {
     min-height: 54px;
     font-size: 12px !important;
     font-weight: 800 !important;
-    letter-spacing: 2.5px;
+    letter-spacing: 1.8px;
     text-transform: uppercase;
 }
 
@@ -200,13 +184,9 @@ div[data-testid="stFormSubmitButton"] button:hover {
     border-color: #ecd18f !important;
 }
 
-/* ALERTS */
-
 div[data-testid="stAlert"] {
     border-radius: 6px;
 }
-
-/* FOOTER */
 
 .fs-footer {
     text-align: center;
@@ -223,7 +203,7 @@ div[data-testid="stAlert"] {
 .fs-footer-type {
     color: #777169;
     font-size: 10px;
-    letter-spacing: 2px;
+    letter-spacing: 1.6px;
     margin-top: 12px;
 }
 
@@ -232,8 +212,6 @@ div[data-testid="stAlert"] {
     font-size: 11px;
     margin-top: 20px;
 }
-
-/* MOBILE */
 
 @media (max-width: 700px) {
     .block-container {
@@ -254,11 +232,15 @@ div[data-testid="stAlert"] {
 
     .fs-type {
         font-size: 9px;
-        letter-spacing: 2px;
+        letter-spacing: 1.4px;
     }
 
     .fs-copy {
         font-size: 16px;
+    }
+
+    .fs-reservation-title {
+        font-size: 27px;
     }
 
     div[data-testid="stForm"] {
@@ -288,6 +270,16 @@ def qualify_request(message: str, guests: int) -> str:
         "anniversary",
         "celebration",
         "party",
+        "срочно",
+        "сегодня",
+        "вечером",
+        "банкет",
+        "день рождения",
+        "свадьба",
+        "мероприятие",
+        "корпоратив",
+        "юбилей",
+        "праздник",
     ]
 
     if guests >= HOT_GUEST_THRESHOLD:
@@ -315,29 +307,29 @@ def send_telegram(
     chat_id = st.secrets["TELEGRAM_CHAT_ID"]
 
     if priority == "HOT":
-        priority_label = "🔥 HIGH PRIORITY"
-        action = "Contact this guest as soon as possible."
+        priority_label = "🔥 HIGH PRIORITY | ВЫСОКИЙ ПРИОРИТЕТ"
+        action = "Contact this guest as soon as possible. | Связаться с гостем как можно скорее."
 
     elif priority == "WARM":
-        priority_label = "🟠 MEDIUM PRIORITY"
-        action = "Follow up with this guest soon."
+        priority_label = "🟠 MEDIUM PRIORITY | СРЕДНИЙ ПРИОРИТЕТ"
+        action = "Follow up with this guest soon. | Связаться с гостем в ближайшее время."
 
     else:
-        priority_label = "🔔 NORMAL REQUEST"
-        action = "Confirm availability with this guest."
+        priority_label = "🔔 NORMAL REQUEST | ОБЫЧНАЯ ЗАЯВКА"
+        action = "Confirm availability with this guest. | Подтвердить наличие мест."
 
     message = (
         "✦ FAMILY SECRET ✦\n"
-        "NEW RESERVATION REQUEST\n\n"
+        "NEW RESERVATION REQUEST | НОВАЯ ЗАЯВКА\n\n"
         f"{priority_label}\n\n"
-        f"👤 Guest: {name}\n"
-        f"📱 Phone / WhatsApp: {contact}\n\n"
-        f"📅 Date: {reservation_date}\n"
-        f"🕐 Time: {reservation_time}\n"
-        f"👥 Guests: {guests}\n\n"
-        "💬 Special requests:\n"
-        f"{request_text or 'None'}\n\n"
-        "📌 Recommended action:\n"
+        f"👤 Guest | Гость: {name}\n"
+        f"📱 Phone / WhatsApp | Телефон: {contact}\n\n"
+        f"📅 Date | Дата: {reservation_date}\n"
+        f"🕐 Time | Время: {reservation_time}\n"
+        f"👥 Guests | Гостей: {guests}\n\n"
+        "💬 Special requests | Пожелания:\n"
+        f"{request_text or 'None | Нет'}\n\n"
+        "📌 Recommended action | Рекомендация:\n"
         f"{action}"
     )
 
@@ -357,10 +349,12 @@ hero_html = (
     '<section class="fs-hero">'
     '<div class="fs-mark">✦</div>'
     '<div class="fs-name">FAMILY<br>SECRET</div>'
-    '<div class="fs-type">RESTAURANT • PRIVATE DINING • EVENTS</div>'
+    '<div class="fs-type">'
+    'RESTAURANT • PRIVATE DINING • EVENTS | РЕСТОРАН • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ'
+    '</div>'
     '<div class="fs-copy">'
-    'Good food brings people together.<br>'
-    'Great evenings become family secrets.'
+    'Good food brings people together. | Хорошая еда объединяет людей.<br>'
+    'Great evenings become family secrets. | Лучшие вечера становятся семейными секретами.'
     '</div>'
     '<div class="fs-line"></div>'
     '</section>'
@@ -371,10 +365,14 @@ st.markdown(hero_html, unsafe_allow_html=True)
 
 reservation_intro = (
     '<section class="fs-reservation">'
-    '<div class="fs-reservation-title">Reserve Your Table</div>'
+    '<div class="fs-reservation-title">'
+    'Reserve Your Table | Забронировать столик'
+    '</div>'
     '<div class="fs-reservation-copy">'
     'Choose your preferred date and time and send us your request. '
-    'Our team will contact you to confirm availability.'
+    '| Выберите дату и время и отправьте заявку. '
+    'Our team will contact you to confirm availability. '
+    '| Наша команда свяжется с вами для подтверждения.'
     '</div>'
     '</section>'
 )
@@ -384,12 +382,12 @@ st.markdown(reservation_intro, unsafe_allow_html=True)
 
 with st.form("family_secret_reservation"):
     name = st.text_input(
-        "Your name",
-        placeholder="John Smith",
+        "Your name | Ваше имя",
+        placeholder="John Smith | Иван Иванов",
     )
 
     contact = st.text_input(
-        "Phone or WhatsApp",
+        "Phone or WhatsApp | Телефон или WhatsApp",
         placeholder="+1 555 123 4567",
     )
 
@@ -397,17 +395,17 @@ with st.form("family_secret_reservation"):
 
     with date_col:
         reservation_date = st.date_input(
-            "Reservation date",
+            "Reservation date | Дата бронирования",
             min_value=date.today(),
         )
 
     with time_col:
         reservation_time = st.time_input(
-            "Preferred time",
+            "Preferred time | Желаемое время",
         )
 
     guests = st.number_input(
-        "Number of guests",
+        "Number of guests | Количество гостей",
         min_value=1,
         max_value=200,
         value=2,
@@ -415,16 +413,16 @@ with st.form("family_secret_reservation"):
     )
 
     request_text = st.text_area(
-        "Special requests",
+        "Special requests | Особые пожелания",
         placeholder=(
-            "Birthday, private dining, dietary requirements, "
-            "children or a special occasion..."
+            "Birthday, private dining, dietary requirements... "
+            "| День рождения, отдельный зал, питание, особый повод..."
         ),
         height=130,
     )
 
     submitted = st.form_submit_button(
-        "Request Reservation",
+        "Request Reservation | Отправить заявку",
         use_container_width=True,
     )
 
@@ -432,7 +430,8 @@ with st.form("family_secret_reservation"):
 if submitted:
     if not name.strip() or not contact.strip():
         st.warning(
-            "Please enter your name and phone or WhatsApp number."
+            "Please enter your name and phone or WhatsApp number. "
+            "| Укажите имя и номер телефона или WhatsApp."
         )
 
     else:
@@ -453,23 +452,25 @@ if submitted:
             )
 
             st.success(
-                "✓ Your reservation request has been received."
+                "✓ Your reservation request has been received. "
+                "| Ваша заявка на бронирование получена."
             )
 
             st.info(
-                "The FAMILY SECRET team will contact you shortly "
-                "to confirm your reservation."
+                "The FAMILY SECRET team will contact you shortly to confirm your reservation. "
+                "| Команда FAMILY SECRET скоро свяжется с вами для подтверждения."
             )
 
         except requests.RequestException:
             st.error(
-                "We couldn't send your request right now. "
-                "Please try again in a moment."
+                "We couldn't send your request right now. Please try again in a moment. "
+                "| Не удалось отправить заявку. Попробуйте ещё раз через минуту."
             )
 
         except KeyError:
             st.error(
-                "Reservation notifications are temporarily unavailable."
+                "Reservation notifications are temporarily unavailable. "
+                "| Уведомления временно недоступны."
             )
 
 
@@ -477,10 +478,12 @@ footer_html = (
     '<footer class="fs-footer">'
     '<div class="fs-footer-name">FAMILY SECRET</div>'
     '<div class="fs-footer-type">'
-    'RESERVATIONS • PRIVATE DINING • SPECIAL EVENTS'
+    'RESERVATIONS • PRIVATE DINING • SPECIAL EVENTS '
+    '| БРОНИРОВАНИЕ • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ'
     '</div>'
     '<div class="fs-footer-note">'
-    'Reservations are confirmed after our team contacts you.'
+    'Reservations are confirmed after our team contacts you. '
+    '| Бронирование считается подтверждённым после связи с нашей командой.'
     '</div>'
     '</footer>'
 )
