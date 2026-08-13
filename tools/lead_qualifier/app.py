@@ -609,47 +609,31 @@ st.markdown(reservation_intro, unsafe_allow_html=True)
 
 
 with st.form("family_secret_reservation"):
-    name = st.text_input(
-        "Your  name | Ваше имя",
-        placeholder="John Smith | Иван Иванов",
-    )
+    # Visible bilingual labels above the actual Streamlit widgets. Native widgets
+    # have unique keys and are used as authoritative inputs (hidden labels via
+    # `label_visibility="collapsed"`) so Streamlit state and backend logic remain.
+    st.markdown("**YOUR NAME | ВАШЕ ИМЯ**")
+    name = st.text_input("Hidden name (fs)", placeholder="John Smith | Иван Иванов", key="fs_name", label_visibility="collapsed")
 
-    contact = st.text_input(
-        "Phone or WhatsApp | Телефон или WhatsApp",
-        placeholder="+1 555 123 4567 | +7 900 000 0000",
-    )
+    st.markdown("**PHONE OR WHATSAPP | ТЕЛЕФОН ИЛИ WHATSAPP**")
+    contact = st.text_input("Hidden contact (fs)", placeholder="+1 555 123 4567 | +7 900 000 0000", key="fs_contact", label_visibility="collapsed")
 
     date_col, time_col = st.columns(2)
-
     with date_col:
-        reservation_date = st.date_input(
-            "Reservation date | Дата бронирования",
-            min_value=date.today(),
-        )
-
+        st.markdown("**RESERVATION DATE | ДАТА БРОНИРОВАНИЯ**")
+        reservation_date = st.date_input("Hidden date (fs)", min_value=date.today(), key="fs_date", label_visibility="collapsed")
     with time_col:
-        reservation_time = st.time_input(
-            "Preferred time | Желаемое время",
-        )
+        st.markdown("**PREFERRED TIME | ЖЕЛАЕМОЕ ВРЕМЯ**")
+        reservation_time = st.time_input("Hidden time (fs)", key="fs_time", label_visibility="collapsed")
 
-    guests = st.number_input(
-        "Number of guests | Количество гостей",
-        min_value=1,
-        max_value=200,
-        value=2,
-        step=1,
-    )
+    st.markdown("**NUMBER OF GUESTS | КОЛИЧЕСТВО ГОСТЕЙ**")
+    guests = st.number_input("Hidden guests (fs)", min_value=1, max_value=200, value=2, step=1, key="fs_guests", label_visibility="collapsed")
 
-    request_text = st.text_area(
-        "Special requests | Особые пожелания",
-        placeholder="Birthday, private dining, dietary requirements... | День рождения, отдельный зал, питание, особый повод...",
-        height=130,
-    )
+    st.markdown("**SPECIAL REQUESTS | ОСОБЫЕ ПОЖЕЛАНИЯ**")
+    request_text = st.text_area("Hidden request (fs)", placeholder="Birthday, private dining, dietary requirements... | День рождения, отдельный зал, питание, особый повод...", height=130, key="fs_request", label_visibility="collapsed")
 
-    submitted = st.form_submit_button(
-        "Request a reservation | Отправить заявку",
-        use_container_width=True,
-    )
+    st.markdown("**REQUEST RESERVATION | ОТПРАВИТЬ ЗАЯВКУ**")
+    submitted = st.form_submit_button("Hidden submit (fs)", use_container_width=True, key="fs_submit")
 
 
 if submitted:
