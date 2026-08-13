@@ -1,0 +1,30 @@
+# Cosmic / mystical-luxury dark theme for the Zodiac & Numerology assistant.
+# Native Streamlit theming (colors, fonts, radii) — every built-in widget
+# (buttons, inputs, forms, tabs, metrics) inherits this correctly and stays
+# themed across Streamlit versions. Custom CSS in ui/styles.py is layered on
+# top only for what config.toml cannot do: starfield, orbit, card layouts.
+
+[theme]
+base = "dark"
+
+primaryColor = "#8B7CF6"
+backgroundColor = "#0A0918"
+secondaryBackgroundColor = "#161329"
+textColor = "#EDEBF7"
+
+linkColor = "#22D3EE"
+borderColor = "#2E2A52"
+
+violetColor = "#8B7CF6"
+blueColor = "#22D3EE"
+yellowColor = "#F2C14E"
+greenColor = "#34D399"
+redColor = "#F87171"
+grayColor = "#8B87A8"
+
+font = "sans-serif"
+headingFontWeights = [700, 700, 600, 600, 600, 600]
+
+baseRadius = "large"
+buttonRadius = "full"
+showWidgetBorder = true

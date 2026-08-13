@@ -1,0 +1,23 @@
+# Extra dependencies for this tool, beyond what the workspace root already
+# provides (streamlit, python-dotenv — see pyproject.toml) — Streamlit
+# Community Cloud reads this file automatically because it's colocated with
+# this app's main file (streamlit_app.py), same pattern as
+# tools/lead_qualifier/requirements.txt.
+#
+# Multi-provider AI gateway (Gemini -> Groq -> Mistral -> Cloudflare Workers
+# AI -> OpenAI last-resort), installed from its own GitHub repo — no local
+# filesystem path, so this works unmodified on Streamlit Cloud. Pinned to a
+# specific commit for reproducible builds; bump the SHA to pick up a newer
+# ALL_API version, no other change needed.
+git+https://github.com/Mmivn/ALL_API.git@6dbf58033763acbf04869b72023102a71e69f87a#egg=all-api
+
+# Listed explicitly (not just relying on the root pyproject.toml, which is
+# for local `uv run` dev only) since Streamlit Cloud builds this app from
+# this file alone.
+python-dotenv>=1.0
+streamlit>=1.61.1
+
+# NOTE: this app needs Python >=3.10 (streamlit>=1.61 itself requires it).
+# Select Python 3.12 in this app's own "Advanced settings" when deploying —
+# do not add a repo-root runtime.txt, since that would also change the
+# Python version used to build lead_qualifier/text_summarizer's deployments.
