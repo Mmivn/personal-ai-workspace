@@ -5,12 +5,13 @@ import streamlit as st
 
 
 RESTAURANT_NAME = "FAMILY SECRET"
+RESTAURANT_TAGLINE = "Table Reservations & Private Events"
 HOT_GUEST_THRESHOLD = 10
 
 
 st.set_page_config(
-    page_title="FAMILY SECRET | Reservations",
-    page_icon="✦",
+    page_title=f"{RESTAURANT_NAME} | Reservations",
+    page_icon="🍽️",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
@@ -142,29 +143,127 @@ div[data-testid="stNumberInput"] label {
 
 div[data-baseweb="input"] > div,
 div[data-baseweb="textarea"] > div {
-    background-color: #f4f1eb !important;
-    border: 1px solid #b8aa92 !important;
     border-radius: 5px !important;
 }
 
-div[data-baseweb="input"] input,
-div[data-baseweb="textarea"] textarea,
-div[data-testid="stTextInput"] input,
-div[data-testid="stNumberInput"] input,
-div[data-testid="stDateInput"] input,
-div[data-testid="stTimeInput"] input {
+/* Textarea & input colors that adapt to user's color scheme */
+@media (prefers-color-scheme: dark) {
+    div[data-baseweb="input"] input,
+    div[data-baseweb="textarea"] textarea,
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stNumberInput"] input,
+    div[data-testid="stDateInput"] input,
+    div[data-testid="stTimeInput"] input {
+        background-color: #f4f1eb !important;
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+        caret-color: #111111 !important;
+        opacity: 1 !important;
+        font-weight: 500 !important;
+    }
+
+    div[data-baseweb="input"] input::placeholder,
+    div[data-baseweb="textarea"] textarea::placeholder {
+        color: #777777 !important;
+        -webkit-text-fill-color: #777777 !important;
+        opacity: 1 !important;
+    }
+
+    /* autofill styling */
+    input:-webkit-autofill,
+    textarea:-webkit-autofill {
+        -webkit-text-fill-color: #111111 !important;
+        caret-color: #111111 !important;
+        box-shadow: 0 0 0px 1000px #f4f1eb inset !important;
+    }
+}
+
+@media (prefers-color-scheme: light) {
+    div[data-baseweb="input"] input,
+    div[data-baseweb="textarea"] textarea,
+    div[data-testid="stTextInput"] input,
+    div[data-testid="stNumberInput"] input,
+    div[data-testid="stDateInput"] input,
+    div[data-testid="stTimeInput"] input {
+        background-color: #ffffff !important;
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+        caret-color: #c5a263 !important;
+        opacity: 1 !important;
+        font-weight: 500 !important;
+    }
+
+    div[data-baseweb="input"] input::placeholder,
+    div[data-baseweb="textarea"] textarea::placeholder {
+        color: #666666 !important;
+        -webkit-text-fill-color: #666666 !important;
+        opacity: 1 !important;
+    }
+
+    input:-webkit-autofill,
+    textarea:-webkit-autofill {
+        -webkit-text-fill-color: #111111 !important;
+        caret-color: #c5a263 !important;
+        box-shadow: 0 0 0px 1000px #ffffff inset !important;
+    }
+}
+
+/* Ensure the Special Requests textarea always shows typed text and caret
+   in both dark and light modes. Selectors verified against the live DOM:
+   textarea[aria-label="Особые пожелания"] (Russian) and
+   textarea[aria-label="Special requests"] (English). */
+textarea[aria-label="Особые пожелания"],
+textarea[aria-label="Special requests"],
+div[data-testid="stTextArea"] textarea {
+    background-color: #f4f1eb !important;
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
     caret-color: #111111 !important;
-    opacity: 1 !important;
-    font-weight: 500 !important;
+    border: 1px solid #b8aa92 !important;
+    border-radius: 6px !important;
+    padding: 10px !important;
+    box-shadow: none !important;
 }
 
-div[data-baseweb="input"] input::placeholder,
-div[data-baseweb="textarea"] textarea::placeholder {
-    color: #777777 !important;
-    -webkit-text-fill-color: #777777 !important;
-    opacity: 1 !important;
+@media (prefers-color-scheme: light) {
+    textarea[aria-label="Особые пожелания"],
+    textarea[aria-label="Special requests"],
+    div[data-testid="stTextArea"] textarea {
+        background-color: #ffffff !important;
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+        caret-color: #c5a263 !important;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    textarea[aria-label="Особые пожелания"],
+    textarea[aria-label="Special requests"],
+    div[data-testid="stTextArea"] textarea {
+        background-color: #f4f1eb !important;
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+        caret-color: #111111 !important;
+    }
+}
+
+textarea::selection {
+    background: rgba(197, 162, 99, 0.2) !important;
+    color: #111111 !important;
+}
+
+textarea:focus {
+    outline: 2px solid rgba(197,162,99,0.18) !important;
+}
+
+/* Strong override for the textarea instance observed in the DOM during testing.
+   This targets the emotion-generated classes present at runtime and ensures
+   visible text/caret/background. Verified selector: class="st-emotion-cache-i9mjlf e1wz7dbj2" */
+textarea.st-emotion-cache-i9mjlf.e1wz7dbj2 {
+    background-color: #f4f1eb !important;
+    color: #111111 !important;
+    -webkit-text-fill-color: #111111 !important;
+    caret-color: #111111 !important;
 }
 
 div[data-testid="stFormSubmitButton"] button {
@@ -306,31 +405,84 @@ def send_telegram(
     token = st.secrets["TELEGRAM_BOT_TOKEN"]
     chat_id = st.secrets["TELEGRAM_CHAT_ID"]
 
+    # Use st.context.locale to choose language for the notification text
+    locale = (getattr(st, "context", None) and getattr(st.context, "locale", "")) or ""
+    lang = "ru" if locale.startswith("ru") else "en"
+
+    translations = {
+        "en": {
+            "priority_hot": "🔥 HIGH PRIORITY",
+            "priority_warm": "🟠 MEDIUM PRIORITY",
+            "priority_normal": "🔔 NORMAL REQUEST",
+            "action_hot": "Contact this guest as soon as possible.",
+            "action_warm": "Follow up with this guest.",
+            "action_normal": "Confirm availability with the guest.",
+            "new_request": "NEW RESERVATION REQUEST",
+            "special_none": "None",
+            "guest_label": "Guest",
+            "phone_label": "Phone / WhatsApp",
+            "date_label": "Date",
+            "time_label": "Time",
+            "guests_label": "Guests",
+            "recommended": "Recommended action",
+            "branding": "FAMILY SECRET",
+        },
+        "ru": {
+            "priority_hot": "🔥 ВЫСОКИЙ ПРИОРИТЕТ",
+            "priority_warm": "🟠 СРЕДНИЙ ПРИОРИТЕТ",
+            "priority_normal": "🔔 ОБЫЧНАЯ ЗАЯВКА",
+            "action_hot": "Связаться с гостем как можно скорее.",
+            "action_warm": "Связаться с гостем в ближайшее время.",
+            "action_normal": "Подтвердить наличие мест.",
+            "new_request": "НОВАЯ ЗАЯВКА",
+            "special_none": "Нет",
+            "guest_label": "Гость",
+            "phone_label": "Телефон",
+            "date_label": "Дата",
+            "time_label": "Время",
+            "guests_label": "Гостей",
+            "recommended": "Рекомендация",
+            "branding": "FAMILY SECRET",
+        },
+    }
+
+    # Build a bilingual (EN | RU) telegram message so recipients see both languages.
+    tr_en = translations["en"]
+    tr_ru = translations["ru"]
+
     if priority == "HOT":
-        priority_label = "🔥 HIGH PRIORITY | ВЫСОКИЙ ПРИОРИТЕТ"
-        action = "Contact this guest as soon as possible. | Связаться с гостем как можно скорее."
+        priority_en = tr_en["priority_hot"]
+        priority_ru = tr_ru["priority_hot"]
+        action_en = tr_en["action_hot"]
+        action_ru = tr_ru["action_hot"]
 
     elif priority == "WARM":
-        priority_label = "🟠 MEDIUM PRIORITY | СРЕДНИЙ ПРИОРИТЕТ"
-        action = "Follow up with this guest soon. | Связаться с гостем в ближайшее время."
+        priority_en = tr_en["priority_warm"]
+        priority_ru = tr_ru["priority_warm"]
+        action_en = tr_en["action_warm"]
+        action_ru = tr_ru["action_warm"]
 
     else:
-        priority_label = "🔔 NORMAL REQUEST | ОБЫЧНАЯ ЗАЯВКА"
-        action = "Confirm availability with this guest. | Подтвердить наличие мест."
+        priority_en = tr_en["priority_normal"]
+        priority_ru = tr_ru["priority_normal"]
+        action_en = tr_en["action_normal"]
+        action_ru = tr_ru["action_normal"]
+
+    special_text = request_text or f"{tr_en['special_none']} | {tr_ru['special_none']}"
 
     message = (
-        "✦ FAMILY SECRET ✦\n"
-        "NEW RESERVATION REQUEST | НОВАЯ ЗАЯВКА\n\n"
-        f"{priority_label}\n\n"
-        f"👤 Guest | Гость: {name}\n"
-        f"📱 Phone / WhatsApp | Телефон: {contact}\n\n"
-        f"📅 Date | Дата: {reservation_date}\n"
-        f"🕐 Time | Время: {reservation_time}\n"
-        f"👥 Guests | Гостей: {guests}\n\n"
-        "💬 Special requests | Пожелания:\n"
-        f"{request_text or 'None | Нет'}\n\n"
-        "📌 Recommended action | Рекомендация:\n"
-        f"{action}"
+        f"🍽️ {RESTAURANT_NAME}\n"
+        f"{tr_en['new_request']} | {tr_ru['new_request']}\n\n"
+        f"{priority_en} | {priority_ru}\n\n"
+        f"👤 {tr_en['guest_label']} | {tr_ru['guest_label']}: {name}\n"
+        f"📱 {tr_en['phone_label']} | {tr_ru['phone_label']}: {contact}\n\n"
+        f"📅 {tr_en['date_label']} | {tr_ru['date_label']}: {reservation_date}\n"
+        f"🕐 {tr_en['time_label']} | {tr_ru['time_label']}: {reservation_time}\n"
+        f"👥 {tr_en['guests_label']} | {tr_ru['guests_label']}: {guests}\n\n"
+        f"💬 {tr_en['label_requests'].capitalize()} | {tr_ru['label_requests']}:\n"
+        f"{special_text}\n\n"
+        f"📌 {tr_en['recommended']} | {tr_ru['recommended']}:\n"
+        f"{action_en} | {action_ru}"
     )
 
     response = requests.post(
@@ -360,19 +512,95 @@ hero_html = (
     '</section>'
 )
 
-st.markdown(hero_html, unsafe_allow_html=True)
+# Determine user's locale (use browser/Streamlit context if available)
+_locale = (getattr(st, "context", None) and getattr(st.context, "locale", "")) or ""
+_lang = "ru" if _locale.startswith("ru") else "en"
 
+_translations_ui = {
+    "en": {
+        "mark": "✦",
+        "name_lines": "FAMILY<br>SECRET",
+        "type": "RESTAURANT • PRIVATE DINING • EVENTS",
+        "copy": "Good food brings people together.<br>Great evenings become family secrets.",
+        "reservation_title": "Reserve Your Table",
+        "reservation_copy": "Choose your preferred date and time and send us your request. Our team will contact you to confirm availability.",
+        "label_name": "Your name",
+        "placeholder_name": "John Smith",
+        "label_contact": "Phone or WhatsApp",
+        "placeholder_contact": "+1 555 123 4567",
+        "label_date": "Reservation date",
+        "label_time": "Preferred time",
+        "label_guests": "Number of guests",
+        "label_requests": "Special requests",
+        "placeholder_requests": "Birthday, private dining, dietary requirements...",
+        "submit": "Request a reservation",
+        "warning_missing": "Please enter your name and phone or WhatsApp number.",
+        "success_received": "✓ Your reservation request has been received.",
+        "info_followup": f"The {RESTAURANT_NAME} team will contact you shortly to confirm your reservation.",
+        "error_send": "We couldn't send your request right now. Please try again in a moment.",
+        "error_unavailable": "Reservation notifications are temporarily unavailable.",
+        "footer_name": RESTAURANT_NAME,
+        "footer_type": "RESERVATIONS • PRIVATE DINING • SPECIAL EVENTS",
+        "footer_note": "Reservations are confirmed after our team contacts you.",
+    },
+    "ru": {
+        "mark": "✦",
+        "name_lines": "FAMILY<br>SECRET",
+        "type": "РЕСТОРАН • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ",
+        "copy": "Хорошая еда объединяет людей.<br>Лучшие вечера становятся семейными секретами.",
+        "reservation_title": "Забронировать столик",
+        "reservation_copy": "Выберите дату и время и отправьте заявку. Наша команда свяжется с вами для подтверждения.",
+        "label_name": "Ваше имя",
+        "placeholder_name": "Иван Иванов",
+        "label_contact": "Телефон или WhatsApp",
+        "placeholder_contact": "+7 900 000 0000",
+        "label_date": "Дата бронирования",
+        "label_time": "Желаемое время",
+        "label_guests": "Количество гостей",
+        "label_requests": "Особые пожелания",
+        "placeholder_requests": "День рождения, отдельный зал, питание, особый повод...",
+        "submit": "Отправить заявку",
+        "warning_missing": "Укажите имя и номер телефона или WhatsApp.",
+        "success_received": "✓ Ваша заявка на бронирование получена.",
+        "info_followup": f"Команда {RESTAURANT_NAME} скоро свяжется с вами для подтверждения.",
+        "error_send": "Не удалось отправить заявку. Попробуйте ещё раз через минуту.",
+        "error_unavailable": "Уведомления временно недоступны.",
+        "footer_name": RESTAURANT_NAME,
+        "footer_type": "БРОНИРОВАНИЕ • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ",
+        "footer_note": "Бронирование считается подтверждённым после связи с нашей командой.",
+    },
+}
+
+_tr_en = _translations_ui["en"]
+_tr_ru = _translations_ui["ru"]
+
+def bi(key: str) -> str:
+    """Return bilingual string: English | Русский for the given translation key."""
+    return f"{_tr_en[key]} | {_tr_ru[key]}"
+
+hero_html = (
+    '<section class="fs-hero">'
+    f'<div class="fs-mark">{_tr_en["mark"]}</div>'
+    f'<div class="fs-name">{_tr_en["name_lines"]}</div>'
+    '<div class="fs-type">'
+    f'{_tr_en["type"]} | {_tr_ru["type"]}'
+    '</div>'
+    '<div class="fs-copy">'
+    f'{_tr_en["copy"]} | {_tr_ru["copy"]}'
+    '</div>'
+    '<div class="fs-line"></div>'
+    '</section>'
+)
+
+st.markdown(hero_html, unsafe_allow_html=True)
 
 reservation_intro = (
     '<section class="fs-reservation">'
     '<div class="fs-reservation-title">'
-    'Reserve Your Table | Забронировать столик'
+    f'{bi("reservation_title")}'
     '</div>'
     '<div class="fs-reservation-copy">'
-    'Choose your preferred date and time and send us your request. '
-    '| Выберите дату и время и отправьте заявку. '
-    'Our team will contact you to confirm availability. '
-    '| Наша команда свяжется с вами для подтверждения.'
+    f'{bi("reservation_copy")}'
     '</div>'
     '</section>'
 )
@@ -382,13 +610,13 @@ st.markdown(reservation_intro, unsafe_allow_html=True)
 
 with st.form("family_secret_reservation"):
     name = st.text_input(
-        "Your name | Ваше имя",
+        "Your  name | Ваше имя",
         placeholder="John Smith | Иван Иванов",
     )
 
     contact = st.text_input(
         "Phone or WhatsApp | Телефон или WhatsApp",
-        placeholder="+1 555 123 4567",
+        placeholder="+1 555 123 4567 | +7 900 000 0000",
     )
 
     date_col, time_col = st.columns(2)
@@ -414,25 +642,19 @@ with st.form("family_secret_reservation"):
 
     request_text = st.text_area(
         "Special requests | Особые пожелания",
-        placeholder=(
-            "Birthday, private dining, dietary requirements... "
-            "| День рождения, отдельный зал, питание, особый повод..."
-        ),
+        placeholder="Birthday, private dining, dietary requirements... | День рождения, отдельный зал, питание, особый повод...",
         height=130,
     )
 
     submitted = st.form_submit_button(
-        "Request Reservation | Отправить заявку",
+        "Request a reservation | Отправить заявку",
         use_container_width=True,
     )
 
 
 if submitted:
     if not name.strip() or not contact.strip():
-        st.warning(
-            "Please enter your name and phone or WhatsApp number. "
-            "| Укажите имя и номер телефона или WhatsApp."
-        )
+        st.warning(bi("warning_missing"))
 
     else:
         priority = qualify_request(
@@ -451,39 +673,25 @@ if submitted:
                 priority=priority,
             )
 
-            st.success(
-                "✓ Your reservation request has been received. "
-                "| Ваша заявка на бронирование получена."
-            )
+            st.success(bi("success_received"))
 
-            st.info(
-                "The FAMILY SECRET team will contact you shortly to confirm your reservation. "
-                "| Команда FAMILY SECRET скоро свяжется с вами для подтверждения."
-            )
+            st.info(bi("info_followup")) 
 
         except requests.RequestException:
-            st.error(
-                "We couldn't send your request right now. Please try again in a moment. "
-                "| Не удалось отправить заявку. Попробуйте ещё раз через минуту."
-            )
+            st.error(bi("error_send"))
 
         except KeyError:
-            st.error(
-                "Reservation notifications are temporarily unavailable. "
-                "| Уведомления временно недоступны."
-            )
+            st.error(bi("error_unavailable"))
 
 
 footer_html = (
     '<footer class="fs-footer">'
-    '<div class="fs-footer-name">FAMILY SECRET</div>'
+    f'<div class="fs-footer-name">{RESTAURANT_NAME}</div>'
     '<div class="fs-footer-type">'
-    'RESERVATIONS • PRIVATE DINING • SPECIAL EVENTS '
-    '| БРОНИРОВАНИЕ • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ'
+    f'{bi("footer_type")}'
     '</div>'
     '<div class="fs-footer-note">'
-    'Reservations are confirmed after our team contacts you. '
-    '| Бронирование считается подтверждённым после связи с нашей командой.'
+    f'{bi("footer_note")}'
     '</div>'
     '</footer>'
 )
