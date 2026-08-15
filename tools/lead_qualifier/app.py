@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import date
 
 import requests
@@ -6,14 +7,44 @@ import streamlit as st
 
 # Diagnostic logging for the Telegram notification pipeline — never logs
 # the bot token or chat ID themselves (see send_telegram below), only
-# exception types/HTTP status codes/missing-key *names*, so these lines
-# are safe to leave in Streamlit Cloud's app logs.
+# exception types/HTTP status codes/missing-key *names*/booleans, so
+# these lines are safe to leave in Streamlit Cloud's app logs.
 logger = logging.getLogger(__name__)
 
 
 RESTAURANT_NAME = "FAMILY SECRET"
 RESTAURANT_TAGLINE = "Table Reservations & Private Events"
 HOT_GUEST_THRESHOLD = 10
+
+TELEGRAM_SECRET_KEYS = ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID")
+
+
+def _configured_secret(key: str) -> str | None:
+    """Read a config value by name — prefers Streamlit Cloud's
+    st.secrets (the documented, primary way to configure this app;
+    accessing a missing key always raises KeyError, never any other
+    exception type, per Streamlit's own Secrets.__getitem__), falling
+    back to a plain environment variable if st.secrets doesn't have it.
+    The env var fallback covers the same value being set as a Streamlit
+    Cloud *environment variable* instead of (or in addition to) a
+    Secret, or running this app somewhere other than Streamlit Cloud.
+    Returns None — never raises — if neither has a non-empty value."""
+    try:
+        value = st.secrets[key]
+    except KeyError:
+        value = None
+    if not value:
+        value = os.environ.get(key)
+    return str(value) if value else None
+
+
+def telegram_config_status() -> dict[str, bool]:
+    """{"TELEGRAM_BOT_TOKEN": bool, "TELEGRAM_CHAT_ID": bool,
+    "notifications_enabled": bool} — never the values themselves, only
+    whether each is present. Safe to log or display."""
+    status = {key: _configured_secret(key) is not None for key in TELEGRAM_SECRET_KEYS}
+    status["notifications_enabled"] = all(status.values())
+    return status
 
 
 st.set_page_config(
@@ -409,17 +440,29 @@ def send_telegram(
     request_text: str,
     priority: str,
 ) -> None:
-    try:
-        token = st.secrets["TELEGRAM_BOT_TOKEN"]
-        chat_id = st.secrets["TELEGRAM_CHAT_ID"]
-    except KeyError as exc:
-        # exc here is just the missing dict *key name* (e.g.
-        # "TELEGRAM_BOT_TOKEN") — never a secret value — so it's safe to
-        # log. This is what tells you *which* secret is missing from
-        # Streamlit Cloud's app secrets instead of just "something's
-        # wrong".
-        logger.error("Telegram notification config missing from st.secrets: %s", exc)
-        raise
+    status = telegram_config_status()
+    # Booleans only, never the values — this is the line to check in
+    # Streamlit Cloud's app logs (Manage app -> ... -> logs) to see
+    # whether a just-saved Secret actually took effect, independent of
+    # whatever the UI is showing.
+    logger.info(
+        "Telegram notification config check: TELEGRAM_BOT_TOKEN configured=%s, "
+        "TELEGRAM_CHAT_ID configured=%s, notifications enabled=%s",
+        status["TELEGRAM_BOT_TOKEN"],
+        status["TELEGRAM_CHAT_ID"],
+        status["notifications_enabled"],
+    )
+    if not status["notifications_enabled"]:
+        missing = [key for key in TELEGRAM_SECRET_KEYS if not status[key]]
+        # `missing` is a list of *key names* (e.g. ["TELEGRAM_CHAT_ID"]),
+        # never a secret value — safe to log. Raised as KeyError so the
+        # caller's existing `except KeyError` -> "notifications
+        # unavailable" handling is unchanged.
+        logger.error("Telegram notification config missing: %s", ", ".join(missing))
+        raise KeyError(", ".join(missing))
+
+    token = _configured_secret("TELEGRAM_BOT_TOKEN")
+    chat_id = _configured_secret("TELEGRAM_CHAT_ID")
 
     # Use st.context.locale to choose language for the notification text
     locale = (getattr(st, "context", None) and getattr(st.context, "locale", "")) or ""
@@ -442,6 +485,7 @@ def send_telegram(
             "guests_label": "Guests",
             "recommended": "Recommended action",
             "branding": "FAMILY SECRET",
+            "label_requests": "Special requests",
         },
         "ru": {
             "priority_hot": "🔥 ВЫСОКИЙ ПРИОРИТЕТ",
@@ -459,6 +503,7 @@ def send_telegram(
             "guests_label": "Гостей",
             "recommended": "Рекомендация",
             "branding": "FAMILY SECRET",
+            "label_requests": "Особые пожелания",
         },
     }
 
