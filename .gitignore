@@ -10,3 +10,7 @@ build/
 
 .streamlit/secrets.toml
 api_test.py
+
+# Temporary copy-paste staging file for the Family Secret app's
+# Streamlit Cloud secrets — real credentials, never committed.
+family_secret_streamlit_secrets.toml
