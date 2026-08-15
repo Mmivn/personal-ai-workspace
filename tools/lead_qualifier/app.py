@@ -1,7 +1,14 @@
+import logging
 from datetime import date
 
 import requests
 import streamlit as st
+
+# Diagnostic logging for the Telegram notification pipeline — never logs
+# the bot token or chat ID themselves (see send_telegram below), only
+# exception types/HTTP status codes/missing-key *names*, so these lines
+# are safe to leave in Streamlit Cloud's app logs.
+logger = logging.getLogger(__name__)
 
 
 RESTAURANT_NAME = "FAMILY SECRET"
@@ -402,8 +409,17 @@ def send_telegram(
     request_text: str,
     priority: str,
 ) -> None:
-    token = st.secrets["TELEGRAM_BOT_TOKEN"]
-    chat_id = st.secrets["TELEGRAM_CHAT_ID"]
+    try:
+        token = st.secrets["TELEGRAM_BOT_TOKEN"]
+        chat_id = st.secrets["TELEGRAM_CHAT_ID"]
+    except KeyError as exc:
+        # exc here is just the missing dict *key name* (e.g.
+        # "TELEGRAM_BOT_TOKEN") — never a secret value — so it's safe to
+        # log. This is what tells you *which* secret is missing from
+        # Streamlit Cloud's app secrets instead of just "something's
+        # wrong".
+        logger.error("Telegram notification config missing from st.secrets: %s", exc)
+        raise
 
     # Use st.context.locale to choose language for the notification text
     locale = (getattr(st, "context", None) and getattr(st.context, "locale", "")) or ""
@@ -495,6 +511,8 @@ def send_telegram(
     )
 
     response.raise_for_status()
+
+    logger.info("Telegram reservation notification sent (status=%s)", response.status_code)
 
 
 hero_html = (
@@ -633,7 +651,11 @@ with st.form("family_secret_reservation"):
     request_text = st.text_area("Hidden request (fs)", placeholder="Birthday, private dining, dietary requirements... | День рождения, отдельный зал, питание, особый повод...", height=130, key="fs_request", label_visibility="collapsed")
 
     st.markdown("**REQUEST RESERVATION | ОТПРАВИТЬ ЗАЯВКУ**")
-    submitted = st.form_submit_button("Hidden submit (fs)", use_container_width=True, key="fs_submit")
+    # Was a leftover debug placeholder ("Hidden submit (fs)") instead of
+    # the real bilingual call-to-action — bi("submit") is the same
+    # translation dict every other customer-facing string on this page
+    # already goes through.
+    submitted = st.form_submit_button(bi("submit"), use_container_width=True, key="fs_submit")
 
 
 if submitted:
@@ -661,10 +683,24 @@ if submitted:
 
             st.info(bi("info_followup")) 
 
-        except requests.RequestException:
+        except requests.RequestException as exc:
+            # Deliberately never logs str(exc)/repr(exc): the request
+            # URL contains the bot token
+            # (api.telegram.org/bot<TOKEN>/sendMessage), and requests'
+            # own exception messages typically include the URL they
+            # failed on. Only the exception's class name and (if the
+            # failure was an HTTP error response) its status code are
+            # logged — enough to diagnose "network down" vs "Telegram
+            # rejected the request" without ever risking the token.
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            logger.error(
+                "Telegram sendMessage request failed: %s (status=%s)", type(exc).__name__, status
+            )
             st.error(bi("error_send"))
 
         except KeyError:
+            # Already logged (with the missing key *name*, never a
+            # secret value) inside send_telegram before this re-raised.
             st.error(bi("error_unavailable"))
 
 
