@@ -46,4 +46,5 @@ def test_generation_client_extracts_text_from_response():
 
     assert client.generate("Question", "Context") == "First answer"
     response.raise_for_status.assert_called_once()
-
+    payload = session.post.call_args.kwargs["json"]
+    assert payload["generationConfig"]["maxOutputTokens"] == 1024

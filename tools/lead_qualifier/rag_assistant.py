@@ -59,7 +59,10 @@ GUEST QUESTION:
             },
             json={
                 "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 300},
+                # Newer Gemini models may spend part of this allowance on
+                # internal reasoning. A small limit can therefore cut off even
+                # a concise guest-facing sentence before it is complete.
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024},
             },
             timeout=self.timeout,
         )
