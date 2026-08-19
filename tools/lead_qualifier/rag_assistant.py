@@ -16,6 +16,44 @@ class AssistantAnswer:
     sources: tuple[VectorSearchResult, ...]
 
 
+def direct_answer_for_common_question(question: str) -> str | None:
+    """Return deterministic answers for the restaurant's most common questions."""
+    text = question.casefold()
+    is_russian = any("а" <= character <= "я" or character == "ё" for character in text)
+
+    answer_rules = (
+        (
+            ("open", "close", "hours", "work", "откры", "закры", "час", "работ"),
+            "Мы открыты ежедневно с 09:00 до 23:00. Кухня работает до 22:00."
+            if is_russian
+            else "We are open daily from 09:00 to 23:00. The kitchen closes at 22:00.",
+        ),
+        (
+            ("potato", "mash", "карто", "пюре"),
+            "Да, у нас есть картофельное пюре в качестве гарнира."
+            if is_russian
+            else "Yes, we have mashed potatoes available as a side dish.",
+        ),
+        (
+            ("phone", "contact", "call", "телефон", "связ", "позвон"),
+            "Связаться с нами можно по телефону 0354 057 942."
+            if is_russian
+            else "You can contact us by phone at 0354 057 942.",
+        ),
+        (
+            ("child", "children", "kid", "дет", "ребен", "ребён"),
+            "Да, рядом с основным залом есть детская игровая зона."
+            if is_russian
+            else "Yes, we have a children's play area near the main dining room.",
+        ),
+    )
+
+    for keywords, answer in answer_rules:
+        if any(keyword in text for keyword in keywords):
+            return answer
+    return None
+
+
 class GeminiGenerationClient:
     """Generate concise answers from retrieved context using Gemini's free tier."""
 

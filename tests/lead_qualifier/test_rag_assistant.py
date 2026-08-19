@@ -1,6 +1,10 @@
 from unittest.mock import Mock
 
-from tools.lead_qualifier.rag_assistant import GeminiGenerationClient, answer_from_results
+from tools.lead_qualifier.rag_assistant import (
+    GeminiGenerationClient,
+    answer_from_results,
+    direct_answer_for_common_question,
+)
 from tools.lead_qualifier.vector_store import VectorSearchResult
 
 
@@ -48,3 +52,17 @@ def test_generation_client_extracts_text_from_response():
     response.raise_for_status.assert_called_once()
     payload = session.post.call_args.kwargs["json"]
     assert payload["generationConfig"]["maxOutputTokens"] == 1024
+
+
+def test_common_hours_question_has_complete_direct_answer():
+    answer = direct_answer_for_common_question("how you work")
+
+    assert answer == (
+        "We are open daily from 09:00 to 23:00. The kitchen closes at 22:00."
+    )
+
+
+def test_common_menu_question_answers_in_russian():
+    answer = direct_answer_for_common_question("У вас есть картофельное пюре?")
+
+    assert answer == "Да, у нас есть картофельное пюре в качестве гарнира."

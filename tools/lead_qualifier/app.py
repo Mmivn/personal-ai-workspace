@@ -17,6 +17,7 @@ from tools.lead_qualifier.knowledge_base import load_knowledge_chunks  # noqa: E
 from tools.lead_qualifier.rag_assistant import (  # noqa: E402
     GeminiGenerationClient,
     answer_from_results,
+    direct_answer_for_common_question,
 )
 from tools.lead_qualifier.semantic_search import GeminiEmbeddingClient  # noqa: E402
 from tools.lead_qualifier.vector_store import index_chunks, search_vector_store  # noqa: E402
@@ -717,22 +718,27 @@ if assistant_submitted:
     else:
         with st.spinner("Searching Family Secret knowledge…"):
             try:
-                embedding_client, generation_client, qdrant = (
-                    family_secret_assistant_services()
-                )
-                search_results = search_vector_store(
-                    assistant_question,
-                    embedding_client,
-                    qdrant,
-                    limit=3,
-                )
-                assistant_answer = answer_from_results(
-                    assistant_question,
-                    search_results,
-                    generation_client,
-                )
+                direct_answer = direct_answer_for_common_question(assistant_question)
+                if direct_answer:
+                    assistant_text = direct_answer
+                else:
+                    embedding_client, generation_client, qdrant = (
+                        family_secret_assistant_services()
+                    )
+                    search_results = search_vector_store(
+                        assistant_question,
+                        embedding_client,
+                        qdrant,
+                        limit=3,
+                    )
+                    assistant_answer = answer_from_results(
+                        assistant_question,
+                        search_results,
+                        generation_client,
+                    )
+                    assistant_text = assistant_answer.text
                 with st.chat_message("assistant"):
-                    st.markdown(assistant_answer.text)
+                    st.markdown(assistant_text)
             except (requests.RequestException, ValueError, KeyError):
                 logger.exception("Family Secret assistant request failed")
                 st.error(
