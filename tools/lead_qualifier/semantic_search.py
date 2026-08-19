@@ -147,6 +147,16 @@ def search_chunks(
     return sorted(results, key=lambda result: result.score, reverse=True)[:limit]
 
 
+def embedding_client_from_env() -> EmbeddingClient:
+    """Build the configured embedding provider, preferring Gemini's free tier."""
+    provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()
+    if provider == "openai":
+        return OpenAIEmbeddingClient(os.getenv("OPENAI_API_KEY", ""))
+    if provider == "gemini":
+        return GeminiEmbeddingClient(os.getenv("GEMINI_API_KEY", ""))
+    raise ValueError("EMBEDDING_PROVIDER must be 'gemini' or 'openai'")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Search the Family Secret knowledge base")
     parser.add_argument("query", help="Guest question")
@@ -154,13 +164,7 @@ def main() -> None:
     args = parser.parse_args()
 
     load_dotenv()
-    provider = os.getenv("EMBEDDING_PROVIDER", "gemini").lower()
-    if provider == "openai":
-        client: EmbeddingClient = OpenAIEmbeddingClient(os.getenv("OPENAI_API_KEY", ""))
-    elif provider == "gemini":
-        client = GeminiEmbeddingClient(os.getenv("GEMINI_API_KEY", ""))
-    else:
-        raise ValueError("EMBEDDING_PROVIDER must be 'gemini' or 'openai'")
+    client = embedding_client_from_env()
     for result in search_chunks(args.query, load_knowledge_chunks(), client, args.limit):
         print(f"[{result.score:.3f}] {result.chunk.heading} ({result.chunk.source_file})")
         print(result.chunk.content)

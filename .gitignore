@@ -14,3 +14,6 @@ api_test.py
 # Temporary copy-paste staging file for the Family Secret app's
 # Streamlit Cloud secrets — real credentials, never committed.
 family_secret_streamlit_secrets.toml
+
+# Generated local vector database for Family Secret RAG.
+tools/lead_qualifier/.qdrant/
