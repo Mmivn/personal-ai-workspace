@@ -254,6 +254,33 @@ div[data-testid="stAlert"] {
     border-radius: 2px;
 }
 
+div[data-testid="stChatMessage"] {
+    background: rgba(203, 180, 134, .07);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--ivory) !important;
+    padding: 18px 20px;
+}
+
+div[data-testid="stChatMessage"] p,
+div[data-testid="stChatMessage"] li,
+div[data-testid="stChatMessage"] span {
+    color: var(--ivory) !important;
+}
+
+div[data-testid="stExpander"] {
+    background: var(--panel) !important;
+    border: 1px solid var(--line) !important;
+    border-radius: 2px !important;
+}
+
+div[data-testid="stExpander"] summary,
+div[data-testid="stExpander"] summary p,
+div[data-testid="stExpander"] [data-testid="stCaptionContainer"],
+div[data-testid="stExpander"] [data-testid="stCaptionContainer"] p {
+    color: #c7c1b6 !important;
+}
+
 hr {
     border-color: var(--line) !important;
     margin: 48px 0 34px !important;
