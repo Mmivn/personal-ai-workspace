@@ -16,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from tools.lead_qualifier.knowledge_base import load_knowledge_chunks  # noqa: E402
 from tools.lead_qualifier.rag_assistant import (  # noqa: E402
     GeminiGenerationClient,
+    GroqGenerationClient,
     answer_from_results,
     direct_answer_for_common_question,
 )
@@ -722,21 +723,34 @@ if assistant_submitted:
                 if direct_answer:
                     assistant_text = direct_answer
                 else:
-                    embedding_client, generation_client, qdrant = (
-                        family_secret_assistant_services()
-                    )
-                    search_results = search_vector_store(
-                        assistant_question,
-                        embedding_client,
-                        qdrant,
-                        limit=3,
-                    )
-                    assistant_answer = answer_from_results(
-                        assistant_question,
-                        search_results,
-                        generation_client,
-                    )
-                    assistant_text = assistant_answer.text
+                    try:
+                        embedding_client, generation_client, qdrant = (
+                            family_secret_assistant_services()
+                        )
+                        search_results = search_vector_store(
+                            assistant_question,
+                            embedding_client,
+                            qdrant,
+                            limit=3,
+                        )
+                        assistant_answer = answer_from_results(
+                            assistant_question,
+                            search_results,
+                            generation_client,
+                        )
+                        assistant_text = assistant_answer.text
+                    except (requests.RequestException, ValueError, KeyError):
+                        logger.warning(
+                            "Primary Family Secret assistant unavailable; using Groq fallback",
+                            exc_info=True,
+                        )
+                        fallback_context = "\n\n".join(
+                            f"{chunk.heading}\n{chunk.content}"
+                            for chunk in load_knowledge_chunks()
+                        )
+                        assistant_text = GroqGenerationClient(
+                            _configured_secret("GROQ_API_KEY") or ""
+                        ).generate(assistant_question, fallback_context)
                 with st.chat_message("assistant"):
                     st.markdown(assistant_text)
             except (requests.RequestException, ValueError, KeyError):

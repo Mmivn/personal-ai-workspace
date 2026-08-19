@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 from tools.lead_qualifier.rag_assistant import (
     GeminiGenerationClient,
+    GroqGenerationClient,
     answer_from_results,
     direct_answer_for_common_question,
 )
@@ -77,3 +78,19 @@ def test_common_menu_question_answers_in_russian():
     answer = direct_answer_for_common_question("У вас есть картофельное пюре?")
 
     assert answer == "Да, у нас есть картофельное пюре в качестве гарнира."
+
+
+def test_groq_generation_client_extracts_fallback_answer():
+    response = Mock()
+    response.json.return_value = {
+        "choices": [{"message": {"content": "Полный запасной ответ."}}]
+    }
+    session = Mock()
+    session.post.return_value = response
+    client = GroqGenerationClient("test-key", session=session)
+
+    assert client.generate("Вопрос", "Факты") == "Полный запасной ответ."
+    response.raise_for_status.assert_called_once()
+    request = session.post.call_args.kwargs
+    assert request["json"]["model"] == "openai/gpt-oss-20b"
+    assert request["headers"]["Authorization"] == "Bearer test-key"

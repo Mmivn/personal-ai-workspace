@@ -8,6 +8,7 @@ import requests
 from tools.lead_qualifier.vector_store import VectorSearchResult
 
 DEFAULT_GENERATION_MODEL = "gemini-3.5-flash"
+DEFAULT_GROQ_MODEL = "openai/gpt-oss-20b"
 
 
 @dataclass(frozen=True)
@@ -122,6 +123,56 @@ GUEST QUESTION:
         payload = response.json()
         parts = payload["candidates"][0]["content"]["parts"]
         return "".join(str(part.get("text", "")) for part in parts).strip()
+
+
+class GroqGenerationClient:
+    """Generate a grounded answer through Groq when Gemini is unavailable."""
+
+    def __init__(
+        self,
+        api_key: str,
+        model: str = DEFAULT_GROQ_MODEL,
+        timeout: float = 45.0,
+        session: requests.Session | None = None,
+    ) -> None:
+        if not api_key:
+            raise ValueError("GROQ_API_KEY is required")
+        self.api_key = api_key
+        self.model = model
+        self.timeout = timeout
+        self.session = session or requests.Session()
+
+    def generate(self, question: str, context: str) -> str:
+        system_prompt = (
+            "You are the official Family Secret restaurant concierge. "
+            "Answer in the guest's language, naturally, warmly, and concisely. "
+            "Use only the provided restaurant information and never invent dishes, "
+            "prices, availability, or policies. If the answer is unavailable, say so "
+            "and suggest contacting the restaurant."
+        )
+        response = self.session.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": self.model,
+                "temperature": 0.2,
+                "max_tokens": 1024,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {
+                        "role": "user",
+                        "content": f"RESTAURANT INFORMATION:\n{context}\n\nQUESTION:\n{question}",
+                    },
+                ],
+            },
+            timeout=self.timeout,
+        )
+        response.raise_for_status()
+        payload = response.json()
+        return str(payload["choices"][0]["message"]["content"]).strip()
 
 
 def answer_from_results(
