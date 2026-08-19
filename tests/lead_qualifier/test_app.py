@@ -35,6 +35,13 @@ def test_app_loads_without_error():
     assert not at.exception
 
 
+def test_rag_assistant_is_visible_on_the_existing_reservation_site():
+    at = _app()
+
+    assert any(item.key == "fs_assistant_question" for item in at.text_input)
+    assert any(button.key == "fs_assistant_submit" for button in at.button)
+
+
 def test_submit_button_shows_the_real_bilingual_label_not_the_debug_placeholder():
     """Regression test for the reported "HIDDEN SUBMIT (FS)" bug: the
     submit button's label was a leftover debug placeholder

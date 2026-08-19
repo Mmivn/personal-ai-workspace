@@ -29,9 +29,9 @@ Lô 1 Trần Quang Khải, P, Nha Trang, Khánh Hòa 650000, Vietnam.
 
 ## Restaurant features
 
-- A children's play area near the dining space.
+- A children's play area near the main dining room.
+- Детская игровая зона находится рядом с основным залом ресторана.
 - Russian, European, and Vietnamese dishes.
 - Live music.
 - Signature cocktails.
 - Suitable for family visits and celebrations.
-

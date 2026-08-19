@@ -1,9 +1,27 @@
 import logging
 import os
+import sys
 from datetime import date
+from pathlib import Path
 
 import requests
 import streamlit as st
+from dotenv import load_dotenv
+from qdrant_client import QdrantClient
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from tools.lead_qualifier.knowledge_base import load_knowledge_chunks  # noqa: E402
+from tools.lead_qualifier.rag_assistant import (  # noqa: E402
+    GeminiGenerationClient,
+    answer_from_results,
+)
+from tools.lead_qualifier.semantic_search import GeminiEmbeddingClient  # noqa: E402
+from tools.lead_qualifier.vector_store import index_chunks, search_vector_store  # noqa: E402
+
+load_dotenv(PROJECT_ROOT / ".env")
 
 # Diagnostic logging for the Telegram notification pipeline — never logs
 # the bot token or chat ID themselves (see send_telegram below), only
@@ -45,6 +63,18 @@ def telegram_config_status() -> dict[str, bool]:
     status = {key: _configured_secret(key) is not None for key in TELEGRAM_SECRET_KEYS}
     status["notifications_enabled"] = all(status.values())
     return status
+
+
+@st.cache_resource
+def family_secret_assistant_services(
+) -> tuple[GeminiEmbeddingClient, GeminiGenerationClient, QdrantClient]:
+    """Build and cache the in-memory vector database used by the website assistant."""
+    api_key = _configured_secret("GEMINI_API_KEY") or ""
+    embedding_client = GeminiEmbeddingClient(api_key)
+    generation_client = GeminiGenerationClient(api_key)
+    qdrant = QdrantClient(":memory:")
+    index_chunks(load_knowledge_chunks(), embedding_client, qdrant)
+    return embedding_client, generation_client, qdrant
 
 
 st.set_page_config(
@@ -747,6 +777,66 @@ if submitted:
             # Already logged (with the missing key *name*, never a
             # secret value) inside send_telegram before this re-raised.
             st.error(bi("error_unavailable"))
+
+
+st.markdown("---")
+st.markdown(
+    """
+    <section class="fs-reservation">
+      <div class="fs-reservation-title">ASK FAMILY SECRET | СПРОСИТЕ FAMILY SECRET</div>
+      <div class="fs-reservation-copy">
+        Ask about opening hours, reservations, the menu, or visiting with children.<br>
+        Спросите о часах работы, бронировании, меню или посещении с детьми.
+      </div>
+    </section>
+    """,
+    unsafe_allow_html=True,
+)
+
+with st.form("family_secret_assistant"):
+    assistant_question = st.text_input(
+        "YOUR QUESTION | ВАШ ВОПРОС",
+        placeholder="When does the kitchen close? | Во сколько закрывается кухня?",
+        key="fs_assistant_question",
+    )
+    assistant_submitted = st.form_submit_button(
+        "ASK ASSISTANT | СПРОСИТЬ АССИСТЕНТА",
+        use_container_width=True,
+        key="fs_assistant_submit",
+    )
+
+if assistant_submitted:
+    if not assistant_question.strip():
+        st.warning("Please enter a question. | Пожалуйста, задайте вопрос.")
+    else:
+        with st.spinner("Searching Family Secret knowledge…"):
+            try:
+                embedding_client, generation_client, qdrant = (
+                    family_secret_assistant_services()
+                )
+                search_results = search_vector_store(
+                    assistant_question,
+                    embedding_client,
+                    qdrant,
+                    limit=3,
+                )
+                assistant_answer = answer_from_results(
+                    assistant_question,
+                    search_results,
+                    generation_client,
+                )
+                with st.chat_message("assistant"):
+                    st.markdown(assistant_answer.text)
+                    if assistant_answer.sources:
+                        with st.expander("Sources used | Использованные источники"):
+                            for source in assistant_answer.sources:
+                                st.caption(f"{source.heading} · {source.source_file}")
+            except (requests.RequestException, ValueError, KeyError):
+                logger.exception("Family Secret assistant request failed")
+                st.error(
+                    "The assistant is temporarily unavailable. | "
+                    "Ассистент временно недоступен."
+                )
 
 
 footer_html = (

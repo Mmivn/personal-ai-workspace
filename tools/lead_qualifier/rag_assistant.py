@@ -7,7 +7,7 @@ import requests
 
 from tools.lead_qualifier.vector_store import VectorSearchResult
 
-DEFAULT_GENERATION_MODEL = "gemini-3.5-flash-lite"
+DEFAULT_GENERATION_MODEL = "gemini-3.5-flash"
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,7 @@ class GeminiGenerationClient:
         )
         prompt = f"""You are the official Family Secret restaurant assistant.
 Answer in the same language as the guest.
+Write naturally and use correct grammar in that language.
 Use only the supplied context. Do not invent prices, policies, availability, or menu items.
 If the context does not contain the answer, clearly say that the information is unavailable
 and suggest contacting the restaurant. Keep the answer friendly and concise.
@@ -93,4 +94,3 @@ def answer_from_results(
         text=generation_client.generate(question, context),
         sources=relevant,
     )
-
