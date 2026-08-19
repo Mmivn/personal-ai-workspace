@@ -268,19 +268,6 @@ div[data-testid="stChatMessage"] span {
     color: var(--ivory) !important;
 }
 
-div[data-testid="stExpander"] {
-    background: var(--panel) !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 2px !important;
-}
-
-div[data-testid="stExpander"] summary,
-div[data-testid="stExpander"] summary p,
-div[data-testid="stExpander"] [data-testid="stCaptionContainer"],
-div[data-testid="stExpander"] [data-testid="stCaptionContainer"] p {
-    color: #c7c1b6 !important;
-}
-
 hr {
     border-color: var(--line) !important;
     margin: 48px 0 34px !important;
@@ -746,10 +733,6 @@ if assistant_submitted:
                 )
                 with st.chat_message("assistant"):
                     st.markdown(assistant_answer.text)
-                    if assistant_answer.sources:
-                        with st.expander("Sources used | Использованные источники"):
-                            for source in assistant_answer.sources:
-                                st.caption(f"{source.heading} · {source.source_file}")
             except (requests.RequestException, ValueError, KeyError):
                 logger.exception("Family Secret assistant request failed")
                 st.error(
