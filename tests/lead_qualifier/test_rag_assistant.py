@@ -75,6 +75,15 @@ def test_common_hours_question_answers_warmly_in_russian():
     )
 
 
+def test_romantic_dinner_recommendation_works_without_an_api():
+    answer = direct_answer_for_common_question(
+        "Какое блюдо вы посоветуете для романтического ужина?"
+    )
+
+    assert "морепродукты или блюдо на гриле" in answer
+    assert answer.endswith("!")
+
+
 def test_common_menu_question_answers_in_russian():
     answer = direct_answer_for_common_question("У вас есть картофельное пюре?")
 

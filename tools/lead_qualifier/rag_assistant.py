@@ -56,6 +56,22 @@ def direct_answer_for_common_question(question: str) -> str | None:
             else "You can contact us by phone at 0354 057 942.",
         ),
         (
+            ("romantic", "date night", "романтич", "свидан"),
+            (
+                "Для романтического ужина рекомендуем выбрать морепродукты или блюдо "
+                "на гриле, дополнить его фирменным коктейлем, а завершить вечер "
+                "домашним десертом. В уютной атмосфере Family Secret такой ужин "
+                "станет особенно запоминающимся!"
+            )
+            if is_russian
+            else (
+                "For a romantic dinner, we recommend seafood or a grilled dish, "
+                "paired with a signature cocktail and followed by a homemade dessert. "
+                "The intimate atmosphere at Family Secret will make your evening "
+                "especially memorable!"
+            ),
+        ),
+        (
             ("child", "children", "kid", "дет", "ребен", "ребён"),
             "Да, рядом с основным залом есть детская игровая зона."
             if is_russian
