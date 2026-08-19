@@ -28,9 +28,13 @@ site provides menu pages in Russian and English.
 - Children's menu
 - Desserts
 
+## Side dishes
+
+- Mashed potatoes are available as a side dish.
+- Картофельное пюре доступно в качестве гарнира.
+
 Breakfast is served until 13:00. The restaurant describes its menu as including
 grilled meat, seafood, homemade desserts, and cocktails.
 
 Individual dish names, ingredients, and prices must be taken from the current
 official menu pages and verified before being used in customer-facing answers.
-

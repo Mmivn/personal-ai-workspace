@@ -16,6 +16,15 @@ def test_loads_family_secret_knowledge_documents():
     assert any("09:00–23:00" in chunk.content for chunk in chunks)
 
 
+def test_menu_knowledge_includes_mashed_potatoes():
+    chunks = load_knowledge_chunks()
+
+    menu_text = "\n".join(
+        chunk.content for chunk in chunks if chunk.source_file == "menu_overview.md"
+    )
+    assert "Mashed potatoes are available" in menu_text
+
+
 def test_chunk_keeps_source_metadata(tmp_path: Path):
     document = tmp_path / "example.md"
     document.write_text(
@@ -54,4 +63,3 @@ def test_empty_sections_do_not_create_empty_chunks(tmp_path: Path):
     assert len(chunks) == 1
     assert chunks[0].heading == "Second"
     assert chunks[0].content == "Useful information."
-
