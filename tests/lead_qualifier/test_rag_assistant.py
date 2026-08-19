@@ -58,7 +58,17 @@ def test_common_hours_question_has_complete_direct_answer():
     answer = direct_answer_for_common_question("how you work")
 
     assert answer == (
-        "We are open daily from 09:00 to 23:00. The kitchen closes at 22:00."
+        "We are open every day from 9:00 AM to 11:00 PM. "
+        "We look forward to welcoming you to Family Secret!"
+    )
+
+
+def test_common_hours_question_answers_warmly_in_russian():
+    answer = direct_answer_for_common_question("Как вы работаете?")
+
+    assert answer == (
+        "Мы открыты каждый день с 9 утра до 11 вечера. "
+        "Будем рады видеть вас в Family Secret!"
     )
 
 

@@ -24,9 +24,15 @@ def direct_answer_for_common_question(question: str) -> str | None:
     answer_rules = (
         (
             ("open", "close", "hours", "work", "откры", "закры", "час", "работ"),
-            "Мы открыты ежедневно с 09:00 до 23:00. Кухня работает до 22:00."
+            (
+                "Мы открыты каждый день с 9 утра до 11 вечера. "
+                "Будем рады видеть вас в Family Secret!"
+            )
             if is_russian
-            else "We are open daily from 09:00 to 23:00. The kitchen closes at 22:00.",
+            else (
+                "We are open every day from 9:00 AM to 11:00 PM. "
+                "We look forward to welcoming you to Family Secret!"
+            ),
         ),
         (
             ("potato", "mash", "карто", "пюре"),
