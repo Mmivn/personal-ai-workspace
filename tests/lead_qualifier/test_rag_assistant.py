@@ -52,6 +52,7 @@ def test_generation_client_extracts_text_from_response():
     response.raise_for_status.assert_called_once()
     payload = session.post.call_args.kwargs["json"]
     assert payload["generationConfig"]["maxOutputTokens"] == 1024
+    assert payload["generationConfig"]["thinkingConfig"] == {"thinkingBudget": 0}
 
 
 def test_common_hours_question_has_complete_direct_answer():

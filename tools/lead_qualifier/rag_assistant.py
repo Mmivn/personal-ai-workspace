@@ -108,7 +108,13 @@ GUEST QUESTION:
                 # Newer Gemini models may spend part of this allowance on
                 # internal reasoning. A small limit can therefore cut off even
                 # a concise guest-facing sentence before it is complete.
-                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 1024},
+                "generationConfig": {
+                    "temperature": 0.2,
+                    "maxOutputTokens": 1024,
+                    # Restaurant answers need speed and reliability, not a long
+                    # hidden reasoning phase that can consume the output budget.
+                    "thinkingConfig": {"thinkingBudget": 0},
+                },
             },
             timeout=self.timeout,
         )
