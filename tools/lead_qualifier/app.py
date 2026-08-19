@@ -89,19 +89,21 @@ st.markdown(
     """
 <style>
 :root {
-    --bg: #090909;
-    --card: #121211;
-    --gold: #c5a263;
-    --gold-light: #dfc083;
-    --text: #f4efe7;
-    --muted: #aaa399;
-    --border: #343028;
+    --ink: #0b0c0c;
+    --panel: #111211;
+    --panel-soft: #151614;
+    --champagne: #cbb486;
+    --champagne-light: #e4d5b6;
+    --ivory: #f4f0e7;
+    --muted: #97958f;
+    --line: rgba(203, 180, 134, .24);
 }
 
 html, body, [data-testid="stAppViewContainer"], .stApp {
     background:
-        radial-gradient(circle at 50% -10%, #312a20 0%, #151310 28%, #090909 65%);
-    color: var(--text);
+        radial-gradient(circle at 50% -18%, rgba(117, 98, 61, .20), transparent 38%),
+        var(--ink);
+    color: var(--ivory);
 }
 
 header[data-testid="stHeader"] {
@@ -117,254 +119,163 @@ footer {
 }
 
 .block-container {
-    max-width: 880px;
-    padding-top: 2rem;
-    padding-bottom: 5rem;
+    max-width: 760px;
+    padding-top: 1rem;
+    padding-bottom: 3rem;
 }
 
 .fs-hero {
     text-align: center;
-    padding: 75px 20px 55px 20px;
+    padding: 54px 20px 32px;
 }
 
 .fs-mark {
-    color: var(--gold);
-    font-size: 24px;
-    letter-spacing: 12px;
-    margin-bottom: 20px;
+    color: var(--champagne);
+    font-size: 14px;
+    letter-spacing: 8px;
+    margin-bottom: 18px;
 }
 
 .fs-name {
-    color: var(--text);
+    color: var(--ivory);
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 64px;
+    font-size: clamp(46px, 8vw, 68px);
     font-weight: 400;
-    line-height: 1.02;
-    letter-spacing: 10px;
+    line-height: .90;
+    letter-spacing: .13em;
 }
 
 .fs-type {
-    color: var(--gold);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 3px;
-    margin-top: 24px;
+    color: var(--champagne);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.8px;
+    margin-top: 25px;
 }
 
 .fs-copy {
-    color: #c4bdb3;
+    color: #aaa79f;
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 18px;
+    font-size: 17px;
     font-style: italic;
-    line-height: 1.7;
-    margin: 34px auto 0 auto;
-    max-width: 620px;
+    line-height: 1.55;
+    margin: 22px auto 0;
+    max-width: 520px;
 }
 
 .fs-line {
-    width: 72px;
+    width: 42px;
     height: 1px;
-    background: var(--gold);
-    margin: 44px auto 0 auto;
+    background: var(--champagne);
+    margin: 30px auto 0;
 }
 
 .fs-reservation {
     text-align: center;
-    margin: 30px 0 30px 0;
+    margin: 18px 0 22px;
 }
 
 .fs-reservation-title {
-    color: var(--text);
+    color: var(--ivory);
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 33px;
-    letter-spacing: 1px;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: .5px;
 }
 
 .fs-reservation-copy {
     color: var(--muted);
-    font-size: 14px;
-    line-height: 1.7;
-    max-width: 620px;
-    margin: 12px auto 0 auto;
+    font-size: 12px;
+    line-height: 1.6;
+    max-width: 500px;
+    margin: 8px auto 0;
 }
 
 div[data-testid="stForm"] {
-    background:
-        linear-gradient(180deg, rgba(24,23,20,.98), rgba(16,16,15,.98));
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 36px;
-    box-shadow: 0 24px 70px rgba(0,0,0,.30);
+    background: linear-gradient(145deg, rgba(21,22,20,.98), rgba(14,15,14,.98));
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    padding: 28px 30px 24px;
+    box-shadow: 0 28px 80px rgba(0,0,0,.28);
 }
 
-div[data-testid="stTextInput"] label,
-div[data-testid="stTextArea"] label,
-div[data-testid="stDateInput"] label,
-div[data-testid="stTimeInput"] label,
-div[data-testid="stNumberInput"] label {
-    color: #d6c7ae !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 1.4px;
+div[data-testid="stForm"] p strong {
+    color: #bcb49f;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.7px;
     text-transform: uppercase;
 }
 
 div[data-baseweb="input"] > div,
 div[data-baseweb="textarea"] > div {
-    border-radius: 5px !important;
+    border-radius: 1px !important;
 }
 
-/* Textarea & input colors that adapt to user's color scheme */
-@media (prefers-color-scheme: dark) {
-    div[data-baseweb="input"] input,
-    div[data-baseweb="textarea"] textarea,
-    div[data-testid="stTextInput"] input,
-    div[data-testid="stNumberInput"] input,
-    div[data-testid="stDateInput"] input,
-    div[data-testid="stTimeInput"] input {
-        background-color: #f4f1eb !important;
-        color: #111111 !important;
-        -webkit-text-fill-color: #111111 !important;
-        caret-color: #111111 !important;
-        opacity: 1 !important;
-        font-weight: 500 !important;
-    }
-
-    div[data-baseweb="input"] input::placeholder,
-    div[data-baseweb="textarea"] textarea::placeholder {
-        color: #777777 !important;
-        -webkit-text-fill-color: #777777 !important;
-        opacity: 1 !important;
-    }
-
-    /* autofill styling */
-    input:-webkit-autofill,
-    textarea:-webkit-autofill {
-        -webkit-text-fill-color: #111111 !important;
-        caret-color: #111111 !important;
-        box-shadow: 0 0 0px 1000px #f4f1eb inset !important;
-    }
-}
-
-@media (prefers-color-scheme: light) {
-    div[data-baseweb="input"] input,
-    div[data-baseweb="textarea"] textarea,
-    div[data-testid="stTextInput"] input,
-    div[data-testid="stNumberInput"] input,
-    div[data-testid="stDateInput"] input,
-    div[data-testid="stTimeInput"] input {
-        background-color: #ffffff !important;
-        color: #111111 !important;
-        -webkit-text-fill-color: #111111 !important;
-        caret-color: #c5a263 !important;
-        opacity: 1 !important;
-        font-weight: 500 !important;
-    }
-
-    div[data-baseweb="input"] input::placeholder,
-    div[data-baseweb="textarea"] textarea::placeholder {
-        color: #666666 !important;
-        -webkit-text-fill-color: #666666 !important;
-        opacity: 1 !important;
-    }
-
-    input:-webkit-autofill,
-    textarea:-webkit-autofill {
-        -webkit-text-fill-color: #111111 !important;
-        caret-color: #c5a263 !important;
-        box-shadow: 0 0 0px 1000px #ffffff inset !important;
-    }
-}
-
-/* Ensure the Special Requests textarea always shows typed text and caret
-   in both dark and light modes. Selectors verified against the live DOM:
-   textarea[aria-label="Особые пожелания"] (Russian) and
-   textarea[aria-label="Special requests"] (English). */
-textarea[aria-label="Особые пожелания"],
-textarea[aria-label="Special requests"],
-div[data-testid="stTextArea"] textarea {
-    background-color: #f4f1eb !important;
+div[data-testid="stForm"] input,
+div[data-testid="stForm"] textarea {
+    background-color: #eeebe4 !important;
     color: #111111 !important;
     -webkit-text-fill-color: #111111 !important;
     caret-color: #111111 !important;
-    border: 1px solid #b8aa92 !important;
-    border-radius: 6px !important;
-    padding: 10px !important;
-    box-shadow: none !important;
+    border-color: transparent !important;
+    font-weight: 500 !important;
 }
 
-@media (prefers-color-scheme: light) {
-    textarea[aria-label="Особые пожелания"],
-    textarea[aria-label="Special requests"],
-    div[data-testid="stTextArea"] textarea {
-        background-color: #ffffff !important;
-        color: #111111 !important;
-        -webkit-text-fill-color: #111111 !important;
-        caret-color: #c5a263 !important;
-    }
+div[data-testid="stForm"] input::placeholder,
+div[data-testid="stForm"] textarea::placeholder {
+    color: #77746e !important;
+    -webkit-text-fill-color: #77746e !important;
 }
 
-@media (prefers-color-scheme: dark) {
-    textarea[aria-label="Особые пожелания"],
-    textarea[aria-label="Special requests"],
-    div[data-testid="stTextArea"] textarea {
-        background-color: #f4f1eb !important;
-        color: #111111 !important;
-        -webkit-text-fill-color: #111111 !important;
-        caret-color: #111111 !important;
-    }
-}
-
-textarea::selection {
-    background: rgba(197, 162, 99, 0.2) !important;
-    color: #111111 !important;
-}
-
-textarea:focus {
-    outline: 2px solid rgba(197,162,99,0.18) !important;
-}
-
-/* Strong override for the textarea instance observed in the DOM during testing.
-   This targets the emotion-generated classes present at runtime and ensures
-   visible text/caret/background. Verified selector: class="st-emotion-cache-i9mjlf e1wz7dbj2" */
-textarea.st-emotion-cache-i9mjlf.e1wz7dbj2 {
-    background-color: #f4f1eb !important;
-    color: #111111 !important;
-    -webkit-text-fill-color: #111111 !important;
-    caret-color: #111111 !important;
+div[data-testid="stForm"] input:focus,
+div[data-testid="stForm"] textarea:focus {
+    box-shadow: 0 0 0 1px var(--champagne) !important;
 }
 
 div[data-testid="stFormSubmitButton"] button {
-    background: linear-gradient(90deg, #ad8b53, #c9a867) !important;
-    color: #0b0b0b !important;
-    border: 1px solid #d2b477 !important;
-    border-radius: 4px !important;
-    min-height: 54px;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    letter-spacing: 1.8px;
+    background: var(--champagne) !important;
+    color: #10110f !important;
+    border: 1px solid var(--champagne) !important;
+    border-radius: 1px !important;
+    min-height: 48px;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 2px;
     text-transform: uppercase;
 }
 
 div[data-testid="stFormSubmitButton"] button:hover {
-    background: linear-gradient(90deg, #c3a061, #dfbf7f) !important;
-    border-color: #ecd18f !important;
+    background: var(--champagne-light) !important;
+    border-color: var(--champagne-light) !important;
 }
 
 div[data-testid="stAlert"] {
-    border-radius: 6px;
+    border-radius: 2px;
+}
+
+hr {
+    border-color: var(--line) !important;
+    margin: 48px 0 34px !important;
+}
+
+.fs-concierge-kicker {
+    color: var(--champagne);
+    font-size: 9px;
+    letter-spacing: 2.4px;
+    margin-bottom: 9px;
 }
 
 .fs-footer {
     text-align: center;
-    padding: 58px 15px 20px 15px;
+    padding: 48px 15px 14px;
 }
 
 .fs-footer-name {
-    color: var(--gold);
+    color: var(--champagne);
     font-family: Georgia, "Times New Roman", serif;
-    font-size: 19px;
-    letter-spacing: 5px;
+    font-size: 16px;
+    letter-spacing: 4px;
 }
 
 .fs-footer-type {
@@ -388,13 +299,13 @@ div[data-testid="stAlert"] {
     }
 
     .fs-hero {
-        padding-top: 52px;
-        padding-bottom: 38px;
+        padding-top: 38px;
+        padding-bottom: 24px;
     }
 
     .fs-name {
-        font-size: 39px;
-        letter-spacing: 5px;
+        font-size: 44px;
+        letter-spacing: 4px;
     }
 
     .fs-type {
@@ -411,7 +322,7 @@ div[data-testid="stAlert"] {
     }
 
     div[data-testid="stForm"] {
-        padding: 22px;
+        padding: 22px 18px 18px;
     }
 }
 </style>
@@ -590,21 +501,6 @@ def send_telegram(
     logger.info("Telegram reservation notification sent (status=%s)", response.status_code)
 
 
-hero_html = (
-    '<section class="fs-hero">'
-    '<div class="fs-mark">✦</div>'
-    '<div class="fs-name">FAMILY<br>SECRET</div>'
-    '<div class="fs-type">'
-    'RESTAURANT • PRIVATE DINING • EVENTS | РЕСТОРАН • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ'
-    '</div>'
-    '<div class="fs-copy">'
-    'Good food brings people together. | Хорошая еда объединяет людей.<br>'
-    'Great evenings become family secrets. | Лучшие вечера становятся семейными секретами.'
-    '</div>'
-    '<div class="fs-line"></div>'
-    '</section>'
-)
-
 # Determine user's locale (use browser/Streamlit context if available)
 _locale = (getattr(st, "context", None) and getattr(st.context, "locale", "")) or ""
 _lang = "ru" if _locale.startswith("ru") else "en"
@@ -614,9 +510,9 @@ _translations_ui = {
         "mark": "✦",
         "name_lines": "FAMILY<br>SECRET",
         "type": "RESTAURANT • PRIVATE DINING • EVENTS",
-        "copy": "Good food brings people together.<br>Great evenings become family secrets.",
+        "copy": "Intimate dining. Memorable evenings.",
         "reservation_title": "Reserve Your Table",
-        "reservation_copy": "Choose your preferred date and time and send us your request. Our team will contact you to confirm availability.",
+        "reservation_copy": "Leave your details. We will personally confirm your table.",
         "label_name": "Your name",
         "placeholder_name": "John Smith",
         "label_contact": "Phone or WhatsApp",
@@ -640,9 +536,9 @@ _translations_ui = {
         "mark": "✦",
         "name_lines": "FAMILY<br>SECRET",
         "type": "РЕСТОРАН • ЧАСТНЫЕ УЖИНЫ • МЕРОПРИЯТИЯ",
-        "copy": "Хорошая еда объединяет людей.<br>Лучшие вечера становятся семейными секретами.",
+        "copy": "Камерные ужины. Незабываемые вечера.",
         "reservation_title": "Забронировать столик",
-        "reservation_copy": "Выберите дату и время и отправьте заявку. Наша команда свяжется с вами для подтверждения.",
+        "reservation_copy": "Оставьте контакты — мы лично подтвердим ваш столик.",
         "label_name": "Ваше имя",
         "placeholder_name": "Иван Иванов",
         "label_contact": "Телефон или WhatsApp",
@@ -676,10 +572,10 @@ hero_html = (
     f'<div class="fs-mark">{_tr_en["mark"]}</div>'
     f'<div class="fs-name">{_tr_en["name_lines"]}</div>'
     '<div class="fs-type">'
-    f'{_tr_en["type"]} | {_tr_ru["type"]}'
+    'PRIVATE DINING · NHA TRANG'
     '</div>'
     '<div class="fs-copy">'
-    f'{_tr_en["copy"]} | {_tr_ru["copy"]}'
+    f'{_tr_en["copy"]}<br>{_tr_ru["copy"]}'
     '</div>'
     '<div class="fs-line"></div>'
     '</section>'
@@ -690,10 +586,10 @@ st.markdown(hero_html, unsafe_allow_html=True)
 reservation_intro = (
     '<section class="fs-reservation">'
     '<div class="fs-reservation-title">'
-    f'{bi("reservation_title")}'
+    f'{_tr_en["reservation_title"]} · {_tr_ru["reservation_title"]}'
     '</div>'
     '<div class="fs-reservation-copy">'
-    f'{bi("reservation_copy")}'
+    f'{_tr_en["reservation_copy"]}<br>{_tr_ru["reservation_copy"]}'
     '</div>'
     '</section>'
 )
@@ -705,31 +601,26 @@ with st.form("family_secret_reservation"):
     # Visible bilingual labels above the actual Streamlit widgets. Native widgets
     # have unique keys and are used as authoritative inputs (hidden labels via
     # `label_visibility="collapsed"`) so Streamlit state and backend logic remain.
-    st.markdown("**YOUR NAME | ВАШЕ ИМЯ**")
+    st.markdown("**NAME · ИМЯ**")
     name = st.text_input("Hidden name (fs)", placeholder="John Smith | Иван Иванов", key="fs_name", label_visibility="collapsed")
 
-    st.markdown("**PHONE OR WHATSAPP | ТЕЛЕФОН ИЛИ WHATSAPP**")
+    st.markdown("**PHONE / WHATSAPP · ТЕЛЕФОН**")
     contact = st.text_input("Hidden contact (fs)", placeholder="+1 555 123 4567 | +7 900 000 0000", key="fs_contact", label_visibility="collapsed")
 
     date_col, time_col = st.columns(2)
     with date_col:
-        st.markdown("**RESERVATION DATE | ДАТА БРОНИРОВАНИЯ**")
+        st.markdown("**DATE · ДАТА**")
         reservation_date = st.date_input("Hidden date (fs)", min_value=date.today(), key="fs_date", label_visibility="collapsed")
     with time_col:
-        st.markdown("**PREFERRED TIME | ЖЕЛАЕМОЕ ВРЕМЯ**")
+        st.markdown("**TIME · ВРЕМЯ**")
         reservation_time = st.time_input("Hidden time (fs)", key="fs_time", label_visibility="collapsed")
 
-    st.markdown("**NUMBER OF GUESTS | КОЛИЧЕСТВО ГОСТЕЙ**")
+    st.markdown("**GUESTS · ГОСТИ**")
     guests = st.number_input("Hidden guests (fs)", min_value=1, max_value=200, value=2, step=1, key="fs_guests", label_visibility="collapsed")
 
-    st.markdown("**SPECIAL REQUESTS | ОСОБЫЕ ПОЖЕЛАНИЯ**")
+    st.markdown("**OCCASION / REQUESTS · ПОЖЕЛАНИЯ**")
     request_text = st.text_area("Hidden request (fs)", placeholder="Birthday, private dining, dietary requirements... | День рождения, отдельный зал, питание, особый повод...", height=130, key="fs_request", label_visibility="collapsed")
 
-    st.markdown("**REQUEST RESERVATION | ОТПРАВИТЬ ЗАЯВКУ**")
-    # Was a leftover debug placeholder ("Hidden submit (fs)") instead of
-    # the real bilingual call-to-action — bi("submit") is the same
-    # translation dict every other customer-facing string on this page
-    # already goes through.
     submitted = st.form_submit_button(bi("submit"), use_container_width=True, key="fs_submit")
 
 
@@ -783,10 +674,11 @@ st.markdown("---")
 st.markdown(
     """
     <section class="fs-reservation">
-      <div class="fs-reservation-title">ASK FAMILY SECRET | СПРОСИТЕ FAMILY SECRET</div>
+      <div class="fs-concierge-kicker">PRIVATE CONCIERGE · ЛИЧНЫЙ КОНСЬЕРЖ</div>
+      <div class="fs-reservation-title">Ask Family Secret</div>
       <div class="fs-reservation-copy">
-        Ask about opening hours, reservations, the menu, or visiting with children.<br>
-        Спросите о часах работы, бронировании, меню или посещении с детьми.
+        Hours, menu, children or a private occasion.<br>
+        Часы работы, меню, дети или частное мероприятие.
       </div>
     </section>
     """,
@@ -795,12 +687,12 @@ st.markdown(
 
 with st.form("family_secret_assistant"):
     assistant_question = st.text_input(
-        "YOUR QUESTION | ВАШ ВОПРОС",
+        "QUESTION · ВОПРОС",
         placeholder="When does the kitchen close? | Во сколько закрывается кухня?",
         key="fs_assistant_question",
     )
     assistant_submitted = st.form_submit_button(
-        "ASK ASSISTANT | СПРОСИТЬ АССИСТЕНТА",
+        "ASK CONCIERGE · СПРОСИТЬ",
         use_container_width=True,
         key="fs_assistant_submit",
     )
