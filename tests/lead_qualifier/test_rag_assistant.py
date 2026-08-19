@@ -4,6 +4,7 @@ from tools.lead_qualifier.rag_assistant import (
     GeminiGenerationClient,
     GroqGenerationClient,
     answer_from_results,
+    answer_looks_complete,
     direct_answer_for_common_question,
 )
 from tools.lead_qualifier.vector_store import VectorSearchResult
@@ -94,3 +95,10 @@ def test_groq_generation_client_extracts_fallback_answer():
     request = session.post.call_args.kwargs
     assert request["json"]["model"] == "openai/gpt-oss-20b"
     assert request["headers"]["Authorization"] == "Bearer test-key"
+
+
+def test_incomplete_answer_is_rejected_before_display():
+    assert not answer_looks_complete("Здравствуйте! Наш ресторан отлично подходит")
+    assert answer_looks_complete(
+        "Для романтического ужина рекомендуем блюда на гриле и домашний десерт."
+    )

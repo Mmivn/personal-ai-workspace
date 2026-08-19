@@ -18,6 +18,7 @@ from tools.lead_qualifier.rag_assistant import (  # noqa: E402
     GeminiGenerationClient,
     GroqGenerationClient,
     answer_from_results,
+    answer_looks_complete,
     direct_answer_for_common_question,
 )
 from tools.lead_qualifier.semantic_search import GeminiEmbeddingClient  # noqa: E402
@@ -739,6 +740,8 @@ if assistant_submitted:
                             generation_client,
                         )
                         assistant_text = assistant_answer.text
+                        if not answer_looks_complete(assistant_text):
+                            raise ValueError("Primary assistant returned an incomplete answer")
                     except (requests.RequestException, ValueError, KeyError):
                         logger.warning(
                             "Primary Family Secret assistant unavailable; using Groq fallback",
@@ -751,6 +754,8 @@ if assistant_submitted:
                         assistant_text = GroqGenerationClient(
                             _configured_secret("GROQ_API_KEY") or ""
                         ).generate(assistant_question, fallback_context)
+                        if not answer_looks_complete(assistant_text):
+                            raise ValueError("Fallback assistant returned an incomplete answer")
                 with st.chat_message("assistant"):
                     st.markdown(assistant_text)
             except (requests.RequestException, ValueError, KeyError):

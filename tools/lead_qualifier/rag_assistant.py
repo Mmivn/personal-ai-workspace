@@ -17,6 +17,14 @@ class AssistantAnswer:
     sources: tuple[VectorSearchResult, ...]
 
 
+def answer_looks_complete(text: str) -> bool:
+    """Reject visibly truncated model output before it reaches a restaurant guest."""
+    cleaned = text.strip()
+    if len(cleaned) < 40:
+        return False
+    return cleaned.endswith((".", "!", "?", "…", '"', "»", ")"))
+
+
 def direct_answer_for_common_question(question: str) -> str | None:
     """Return deterministic answers for the restaurant's most common questions."""
     text = question.casefold()
