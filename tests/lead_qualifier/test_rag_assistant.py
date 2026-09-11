@@ -111,3 +111,18 @@ def test_incomplete_answer_is_rejected_before_display():
     assert answer_looks_complete(
         "Для романтического ужина рекомендуем блюда на гриле и домашний десерт."
     )
+
+
+def test_kitchen_hours_are_distinct_from_restaurant_hours():
+    assert "10:00 PM" in direct_answer_for_common_question("When does the kitchen close?")
+    assert "22:00" in direct_answer_for_common_question("Во сколько закрывается кухня?")
+
+
+def test_breakfast_hours_are_distinct_from_restaurant_hours():
+    assert "1:00 PM" in direct_answer_for_common_question("Until what time is breakfast?")
+    assert "13:00" in direct_answer_for_common_question("До скольки завтрак?")
+
+
+def test_unrelated_substrings_do_not_trigger_common_answers():
+    assert direct_answer_for_common_question("Do you have a workspace?") is None
+    assert direct_answer_for_common_question("Where is the closest pharmacy?") is None

@@ -17,11 +17,17 @@ from pathlib import Path
 from unittest.mock import Mock
 
 import requests
+import pytest
 from streamlit.testing.v1 import AppTest
 
 # AppTest.from_file resolves relative paths against *this* file's
 # directory (tests/lead_qualifier/), not the pytest working directory.
 APP_PATH = str(Path(__file__).parent.parent.parent / "tools" / "lead_qualifier" / "app.py")
+
+
+@pytest.fixture(autouse=True)
+def isolated_reservation_storage(monkeypatch, tmp_path):
+    monkeypatch.setenv("RESERVATION_DB_PATH", str(tmp_path / "requests.sqlite3"))
 
 
 def _app() -> AppTest:
@@ -83,3 +89,34 @@ def test_submit_succeeds_when_credentials_are_valid_and_never_raises_keyerror(mo
     assert not at.error, f"expected no error message, got: {[e.value for e in at.error]}"
     assert at.success, "expected a success message after submit — send_telegram likely raised"
     fake_post.assert_called_once()
+
+
+def test_timeout_keeps_request_and_double_submit_does_not_send_again(monkeypatch):
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "000000:test-only")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "000000000")
+    post = Mock(side_effect=requests.Timeout())
+    monkeypatch.setattr(requests, "post", post)
+    at = _app()
+    at.text_input(key="fs_name").set_value("Test Guest")
+    at.text_input(key="fs_contact").set_value("+1 555 000 0000")
+    at.button(key="fs_submit").click().run()
+    assert not at.exception
+    assert not at.success
+    assert any("Заявка сохранена" in w.value for w in at.warning)
+    at.button(key="fs_submit").click().run()
+    assert not at.exception
+    post.assert_called_once()
+
+
+def test_missing_storage_does_not_send_or_claim_success(monkeypatch):
+    monkeypatch.delenv("RESERVATION_DB_PATH")
+    post = Mock()
+    monkeypatch.setattr(requests, "post", post)
+    at = _app()
+    at.text_input(key="fs_name").set_value("Test Guest")
+    at.text_input(key="fs_contact").set_value("+1 555 000 0000")
+    at.button(key="fs_submit").click().run()
+    assert not at.exception
+    assert at.error
+    assert not at.success
+    post.assert_not_called()

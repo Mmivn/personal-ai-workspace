@@ -1,3 +1,6 @@
+> Reservation website deployment: see [RESERVATIONS.md](RESERVATIONS.md).
+> The form now requires persistent storage configuration before deployment.
+
 # Lead Qualifier
 
 A small Python command-line tool that receives a customer request, sends it through an HTTP POST request, and classifies the lead as **HOT**, **WARM**, or **COLD**.
