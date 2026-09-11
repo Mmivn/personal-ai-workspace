@@ -1,8 +1,11 @@
+import json
 import logging
 import os
+import sqlite3
 import sys
 from datetime import date
 from pathlib import Path
+from uuid import uuid4
 
 import requests
 import streamlit as st
@@ -13,6 +16,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from tools.lead_qualifier.reservations import submit_reservation  # noqa: E402
 from tools.lead_qualifier.knowledge_base import load_knowledge_chunks  # noqa: E402
 from tools.lead_qualifier.rag_assistant import (  # noqa: E402
     GeminiGenerationClient,
@@ -41,18 +45,14 @@ TELEGRAM_SECRET_KEYS = ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID")
 
 
 def _configured_secret(key: str) -> str | None:
-    """Read a config value by name — prefers Streamlit Cloud's
-    st.secrets (the documented, primary way to configure this app;
-    accessing a missing key always raises KeyError, never any other
-    exception type, per Streamlit's own Secrets.__getitem__), falling
-    back to a plain environment variable if st.secrets doesn't have it.
-    The env var fallback covers the same value being set as a Streamlit
-    Cloud *environment variable* instead of (or in addition to) a
-    Secret, or running this app somewhere other than Streamlit Cloud.
-    Returns None — never raises — if neither has a non-empty value."""
+    """Prefer Streamlit secrets; fall back to environment when absent.
+
+    Missing secret files and missing individual keys are both normal for local
+    runs. Malformed secret configuration is not silently ignored.
+    """
     try:
         value = st.secrets[key]
-    except KeyError:
+    except (KeyError, FileNotFoundError):
         value = None
     if not value:
         value = os.environ.get(key)
@@ -651,40 +651,48 @@ if submitted:
             int(guests),
         )
 
+        payload = dict(
+            name=name.strip(),
+            contact=contact.strip(),
+            reservation_date=reservation_date.strftime("%d %B %Y"),
+            reservation_time=reservation_time.strftime("%H:%M"),
+            guests=int(guests),
+            request_text=request_text.strip(),
+            priority=priority,
+        )
+        # Keep an ID for each submitted payload within this browser session.
+        # Streamlit reruns and double clicks reuse it, including after a timeout.
+        payload_key = json.dumps(payload, ensure_ascii=False, sort_keys=True)
+        request_ids = st.session_state.setdefault("fs_reservation_ids", {})
+        request_id = request_ids.setdefault(payload_key, str(uuid4()))
         try:
-            send_telegram(
-                name=name,
-                contact=contact,
-                reservation_date=reservation_date.strftime("%d %B %Y"),
-                reservation_time=reservation_time.strftime("%H:%M"),
-                guests=int(guests),
-                request_text=request_text,
-                priority=priority,
+            delivery = submit_reservation(
+                _configured_secret("RESERVATION_DB_PATH") or "",
+                request_id,
+                payload,
+                send_telegram,
             )
-
-            st.success(bi("success_received"))
-
-            st.info(bi("info_followup")) 
-
-        except requests.RequestException as exc:
-            # Deliberately never logs str(exc)/repr(exc): the request
-            # URL contains the bot token
-            # (api.telegram.org/bot<TOKEN>/sendMessage), and requests'
-            # own exception messages typically include the URL they
-            # failed on. Only the exception's class name and (if the
-            # failure was an HTTP error response) its status code are
-            # logged — enough to diagnose "network down" vs "Telegram
-            # rejected the request" without ever risking the token.
-            status = getattr(getattr(exc, "response", None), "status_code", None)
+        except (OSError, sqlite3.Error, ValueError) as error:
             logger.error(
-                "Telegram sendMessage request failed: %s (status=%s)", type(exc).__name__, status
+                "Reservation storage unavailable (%s); request status requires inspection",
+                type(error).__name__,
             )
-            st.error(bi("error_send"))
-
-        except KeyError:
-            # Already logged (with the missing key *name*, never a
-            # secret value) inside send_telegram before this re-raised.
-            st.error(bi("error_unavailable"))
+            st.error(
+                "We couldn't confirm receipt. Please contact the restaurant directly. | "
+                "Не удалось подтвердить получение заявки. Свяжитесь с рестораном напрямую."
+            )
+        else:
+            if delivery == "sent":
+                st.success(bi("success_received"))
+                st.info(bi("info_followup"))
+            else:
+                st.warning(
+                    "Your request was saved, but staff notification is unconfirmed. "
+                    "Please contact the restaurant directly to confirm your table. | "
+                    "Заявка сохранена, но доставка уведомления сотрудникам не подтверждена. "
+                    "Свяжитесь с рестораном напрямую для подтверждения столика."
+                )
+            st.caption(f"Request / Заявка: {request_id}")
 
 
 st.markdown("---")

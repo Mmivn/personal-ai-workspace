@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+import re
 
 import requests
 
@@ -30,9 +31,28 @@ def direct_answer_for_common_question(question: str) -> str | None:
     text = question.casefold()
     is_russian = any("а" <= character <= "я" or character == "ё" for character in text)
 
+    # Specific service hours take precedence over the restaurant's opening hours.
+    # Facts come from knowledge/restaurant_info.md (verified there on 2026-08-19).
+    hours_question = re.search(
+        r"\b(?:when|hours?|open|close|closes|closing|until|time)\b|когда|час|откры|закры|до скольки",
+        text,
+    )
+    if hours_question and re.search(r"\bkitchen\b|кухн", text):
+        return (
+            "Кухня работает до 22:00. Ресторан открыт ежедневно с 09:00 до 23:00."
+            if is_russian
+            else "The kitchen closes at 10:00 PM. The restaurant is open daily from 9:00 AM to 11:00 PM."
+        )
+    if hours_question and re.search(r"\bbreakfast\b|завтрак", text):
+        return (
+            "Завтраки подают до 13:00."
+            if is_russian
+            else "Breakfast is served until 1:00 PM."
+        )
+
     answer_rules = (
         (
-            ("open", "close", "hours", "work", "откры", "закры", "час", "работ"),
+            ("open", "close", "hours", "how you work", "откры", "закры", "час", "работ"),
             (
                 "Мы открыты каждый день с 9 утра до 11 вечера. "
                 "Будем рады видеть вас в Family Secret!"
@@ -80,7 +100,11 @@ def direct_answer_for_common_question(question: str) -> str | None:
     )
 
     for keywords, answer in answer_rules:
-        if any(keyword in text for keyword in keywords):
+        if any(
+            re.search(r"\b" + re.escape(keyword) + r"\b", text)
+            if keyword.isascii() else keyword in text
+            for keyword in keywords
+        ):
             return answer
     return None
 

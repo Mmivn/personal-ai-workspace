@@ -17,3 +17,7 @@ family_secret_streamlit_secrets.toml
 
 # Generated local vector database for Family Secret RAG.
 tools/lead_qualifier/.qdrant/
+
+# Private reservation state (never commit customer data).
+*.sqlite3
+*.sqlite3-*
